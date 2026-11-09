@@ -33,11 +33,11 @@ Host: franc
 [OK  ] Platform        Debian GNU/Linux 13 (trixie) amd64: supported target
 [OK  ] CPU             8 logical CPU(s)
 [OK  ] Memory          4.9 GiB available of 5.6 GiB
-[OK  ] Disk            203.4 GiB free of 224.7 GiB on /
+[OK  ] Disk            202.7 GiB free of 224.7 GiB on /
 [INFO] Privileges      sudo is available (not verified that this user may use it)
-[OK  ] Docker CLI      available (version 29.9.1)
-[OK  ] Docker Engine   ready (version 29.9.1)
-[OK  ] Docker Compose  available (version 5.6.0)
+[OK  ] Docker CLI      available (version 29.9.3)
+[INFO] Docker Engine   not checked: this user cannot use Docker without sudo (CaratCore uses Docker with sudo)
+[OK  ] Docker Compose  available (version 5.7.0)
 [OK  ] Ports           53, 3000, 3001 are free
 [OK  ] Internet        download.docker.com:443 is reachable
 [OK  ] Tailscale       connected

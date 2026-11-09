@@ -129,10 +129,10 @@ explícitamente) o **Pendiente**.
 - Probar los casos de fallo de `doctor` en una máquina real.
 - Verificar la huella de la clave GPG de Docker además de descargarla por
   HTTPS (la guía oficial solo la descarga).
-- Probar en Franc: la detección de conflictos, un fallo a mitad, Ctrl+C
-  durante `apt` y el mensaje INFO de `doctor` con un usuario fuera del grupo
-  `docker`. Hecho (2026-11-09): instalación real completa con
-  `install docker` en Franc; `doctor` detecta después Docker y Compose.
+- Probar en Franc: la detección de conflictos, un fallo a mitad y Ctrl+C
+  durante `apt`. Hecho (2026-11-09): instalación real completa con
+  `install docker`; con el usuario fuera del grupo `docker`, `doctor` muestra
+  el Engine como INFO y `sudo docker ps` funciona.
 
 ## Ideas fuera de la v1
 Interfaz web, otras distribuciones, GPU y recomendador avanzado, backups,
