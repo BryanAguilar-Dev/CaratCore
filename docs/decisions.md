@@ -71,8 +71,7 @@ explícitamente) o **Pendiente**.
   - Workflow propio en vez de GoReleaser: para un solo binario basta y hay una
     herramienta menos que entender.
   - Sin instalador `curl | sh`, por coherencia con la idea del proyecto.
-  - No se publica una versión sin haberla probado en Franc (`doctor`,
-    `--dry-run`) y en la VM Debian limpia.
+  - No se publica una versión sin haberla probado en Franc (ver D19).
 - **D16. CI** (2026-11-09): `ci.yml` pasa `gofmt`, `go vet` y `go test` en cada
   push a `main` y en cada pull request.
 - **D17. Docker siempre con sudo, nunca con el grupo `docker`** (2026-11-09).
@@ -100,6 +99,13 @@ explícitamente) o **Pendiente**.
     dejar el sistema a medias): el hijo recibe SIGINT del terminal, CaratCore
     sobrevive, no lanza más pasos e informa dónde se paró.
   - Sin opción `--yes` por ahora: no hace falta hasta que haya automatización.
+- **D19. Pruebas reales en Franc, no en una VM** (2026-11-09). Franc es un
+  portátil Debian 13 sin datos importantes y se puede reinstalar; es más
+  práctico que mantener una VM. Sustituye a la regla anterior ("solo VM,
+  jamás Franc"). Riesgo aceptado: un fallo puede cortar Tailscale o dejar
+  `apt` a medias, así que las pruebas que cambian el sistema se hacen estando
+  delante del portátil. Para probar la instalación, antes hay que desinstalar
+  el Docker que ya tiene.
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
@@ -123,7 +129,7 @@ explícitamente) o **Pendiente**.
 - Probar los casos de fallo de `doctor` en una máquina real.
 - Verificar la huella de la clave GPG de Docker además de descargarla por
   HTTPS (la guía oficial solo la descarga).
-- Probar en la VM Debian limpia: `install docker --dry-run`, la detección de
+- Probar en Franc: `install docker --dry-run`, la detección de
   conflictos, la instalación real, un fallo a mitad y Ctrl+C durante `apt`.
 
 ## Ideas fuera de la v1

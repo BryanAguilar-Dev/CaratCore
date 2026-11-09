@@ -40,8 +40,9 @@ implementa hasta cerrar la v1.
 ## Seguridad
 - Nunca pidas ni guardes contraseñas, tokens ni claves.
 - Los commits usan el correo `noreply` de GitHub, nunca el personal.
-- El instalador se prueba solo en una VM Debian limpia, jamás en Franc (el
-  servidor de Bryan, su acceso remoto por Tailscale).
+- El instalador se prueba en Franc (portátil Debian de Bryan, sin datos
+  importantes; ver D19), estando delante de la máquina por si se pierde el
+  acceso por Tailscale.
 - `doctor` nunca modifica el sistema.
 
 ## Comandos

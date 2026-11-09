@@ -206,8 +206,8 @@ go test ./...   # todos los tests
 ```
 
 Los tests nunca tocan el sistema: usan `Env` falsos (doctor) o `Host`
-inventados (docker). La prueba real del instalador se hará solo en una VM
-Debian limpia, nunca en Franc.
+inventados (docker). La prueba real del instalador se hace en Franc, estando
+delante del portátil por si se pierde el acceso remoto (D19).
 
 ## 6. Cómo llega CaratCore al usuario
 
@@ -234,8 +234,8 @@ descargado es exactamente el publicado.
 
 ## 7. Qué falta y hacia dónde va
 
-- **Probar el instalador en la VM Debian limpia** (nunca en Franc): instalación
-  real, un fallo a mitad y Ctrl+C durante `apt`.
+- **Probar el instalador en Franc**: instalación real, un fallo a mitad y
+  Ctrl+C durante `apt`.
 - **Servicios**: AdGuard Home y Uptime Kuma con Docker Compose, con su
   catálogo en JSON incrustado (`go:embed`).
 - Pendientes de seguridad y diseño: ver la sección "Pendientes" de
