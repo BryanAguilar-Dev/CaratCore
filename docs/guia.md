@@ -300,10 +300,9 @@ La versión se mete en el binario al compilar:
 `SHA256SUMS` permite al usuario comprobar con `sha256sum -c` que el archivo
 descargado es exactamente el publicado.
 
-Una release en borrador solo la ve el dueño del repositorio, así que la
-prueba previa se hace con un binario compilado con las mismas opciones que
-`release.yml` (`docs/prueba-v0.1.0.md`) y, tras publicar, se repite la
-descarga como lo haría un usuario.
+Una release en borrador solo la ve el dueño del repositorio. Eso permite
+etiquetar, probar en una VM el binario exacto del borrador y publicar solo si
+pasa (`docs/prueba-v0.1.0.md`).
 
 ## 7. Qué falta y hacia dónde va
 

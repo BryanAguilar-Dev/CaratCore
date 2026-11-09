@@ -20,29 +20,29 @@ etiquetes. Los puntos **(obligatorio)** deciden si se publica; los
 - Al terminar, apunta la IP de la VM (`ip -brief addr`) y **haz una
   instantánea** ("limpia"). Te permite volver atrás para los casos opcionales.
 
-## B. Compilar y copiar el binario
+## B. Copiar el binario del borrador
 
-En Windows, desde la carpeta del proyecto (PowerShell). Son las mismas
-opciones que usa `release.yml`:
+La etiqueta `v0.1.0` ya está subida y GitHub Actions creó la release en
+**borrador**. Solo la ve el dueño del repositorio, así que se descarga desde
+el navegador en Windows y se copia a la VM:
 
-```
-$env:GOOS='linux'; $env:GOARCH='amd64'; $env:CGO_ENABLED='0'
-go build -trimpath -ldflags "-s -w -X main.version=v0.1.0-test" -o caratcore-linux-amd64 ./cmd/caratcore
-Remove-Item Env:GOOS, Env:GOARCH, Env:CGO_ENABLED
-scp caratcore-linux-amd64 bryan@IP-DE-LA-VM:
-```
+1. GitHub > CaratCore > *Releases* > borrador `v0.1.0`: descarga
+   `caratcore-linux-amd64` y `SHA256SUMS` (por ejemplo, a Descargas).
+2. En PowerShell, desde la carpeta donde se descargaron:
+   ```
+   scp caratcore-linux-amd64 SHA256SUMS bryan@IP-DE-LA-VM:
+   ```
 
 En la VM (por SSH: `ssh bryan@IP-DE-LA-VM`):
 
 ```
+sha256sum -c SHA256SUMS
 chmod +x caratcore-linux-amd64
 ./caratcore-linux-amd64 version
 ```
 
-- [ ] (obligatorio) Muestra `caratcore v0.1.0-test`.
-
-El binario de Windows queda en la carpeta del proyecto, pero `.gitignore` lo
-excluye de los commits.
+- [ ] (obligatorio) `sha256sum -c` dice `caratcore-linux-amd64: OK`.
+- [ ] (obligatorio) `version` muestra `caratcore v0.1.0`.
 
 ## C. Sin sudo
 
@@ -115,18 +115,20 @@ Vuelve a la instantánea "limpia" antes de cada uno.
 
 ## H. Publicar
 
-Si todos los obligatorios pasan:
+**Si todos los obligatorios pasan:**
 
-1. Sustituir el ejemplo de `doctor` del README por la salida real (punto F) y
-   apuntar el resultado de la prueba en `docs/decisions.md`.
-2. Etiquetar y subir (desde Windows):
-   ```
-   git tag -a v0.1.0 -m "CaratCore v0.1.0"
-   git push origin v0.1.0
-   ```
-3. En GitHub, pestaña *Actions*: esperar a que termine "Release". En
-   *Releases* aparece el borrador con `caratcore-linux-amd64` y `SHA256SUMS`.
-   Revisar las notas y pulsar **Publish release**.
-4. Comprobación final en la VM: seguir el paso 2 del README ("Download
-   CaratCore and check it") con `v0.1.0`. `sha256sum -c` debe decir `OK` y
-   `version` debe mostrar `caratcore v0.1.0`.
+1. En GitHub, abrir el borrador `v0.1.0`, revisar las notas y pulsar
+   **Publish release**.
+2. Comprobación final en la VM: seguir el paso 2 del README ("Download
+   CaratCore and check it") con `v0.1.0`. `sha256sum -c` debe decir `OK`.
+3. Sustituir el ejemplo de `doctor` del README por la salida real (punto F) y
+   apuntar el resultado en `docs/decisions.md`. Esto va a `main`; el binario
+   publicado no cambia.
+
+**Si algo obligatorio falla:** no publicar. Se borra el borrador en GitHub y
+la etiqueta, se corrige y se vuelve a etiquetar:
+
+```
+git tag -d v0.1.0
+git push origin --delete v0.1.0
+```

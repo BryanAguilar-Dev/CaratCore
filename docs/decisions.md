@@ -190,9 +190,10 @@ explícitamente) o **Pendiente**.
 - **D28. La v0.1.0 se prueba en una VM Debian 13 limpia** (2026-11-09).
   Complementa D19: Franc ya tiene Docker y servicios, así que no sirve para
   probar una instalación desde cero. La lista está en
-  `docs/prueba-v0.1.0.md`: se prueba un binario compilado con las mismas
-  opciones que `release.yml`, después se etiqueta, se publica el borrador y se
-  repite la descarga del README con la versión publicada. No hace falta un
+  `docs/prueba-v0.1.0.md`: se etiqueta primero, se prueba en la VM el binario
+  del borrador que crea `release.yml` (así se prueba exactamente lo que se
+  publicará), y solo si pasa se publica y se repite la descarga del README.
+  Si falla, se borran el borrador y la etiqueta, y nadie lo ha visto. No hace falta un
   pre-instalador: el binario es estático (sin Go ni librerías), y lo único que
   necesita es root o sudo.
 
