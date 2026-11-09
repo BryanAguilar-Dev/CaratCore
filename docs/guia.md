@@ -26,11 +26,12 @@ internal/             el núcleo. "internal" = otros proyectos no pueden importa
   osrelease/          lee /etc/os-release (qué distribución y versión es)
   plan/               el plan de instalación como dato
   docker/             detecta Docker y genera el plan para instalarlo
+    docker.asc        clave de firma de Docker, incrustada en el binario
   runner/             ejecuta un plan paso a paso (con sudo si hace falta)
   catalog/            los servicios disponibles (services.json incrustado)
   service/            genera el plan que despliega un servicio con Compose
   ports/              qué puertos están ocupados (lee /proc/net)
-docs/                 decisiones y esta guía
+docs/                 decisiones, esta guía y la lista de prueba de la v0.1.0
 go.mod                nombre del módulo y versión de Go; sin dependencias externas
 .gitattributes        fuerza finales de línea LF (estilo Linux)
 ```
@@ -103,6 +104,11 @@ Un puerto ocupado por un servicio que CaratCore ya desplegó (existe su
 `compose.yaml`) no es un problema: sale OK. `doctor` no puede comprobar que
 el puerto lo ocupe de verdad ese contenedor, porque eso exige `sudo docker` y
 `doctor` nunca usa sudo (D24).
+
+Para saber si el usuario podrá usar sudo sin ejecutarlo, `doctor` busca el
+GID del grupo `sudo` en `/etc/group` y mira si está entre los grupos del
+proceso (`os.Getgroups`). En Debian, pertenecer a ese grupo es lo que da
+permiso por defecto. Es una pista, no una garantía (D27).
 
 ### osrelease
 Una sola función: `Parse` convierte las líneas `CLAVE=valor` de
@@ -294,7 +300,15 @@ La versión se mete en el binario al compilar:
 `SHA256SUMS` permite al usuario comprobar con `sha256sum -c` que el archivo
 descargado es exactamente el publicado.
 
+Una release en borrador solo la ve el dueño del repositorio, así que la
+prueba previa se hace con un binario compilado con las mismas opciones que
+`release.yml` (`docs/prueba-v0.1.0.md`) y, tras publicar, se repite la
+descarga como lo haría un usuario.
+
 ## 7. Qué falta y hacia dónde va
+
+- **Publicar la v0.1.0** tras la prueba en una VM limpia
+  (`docs/prueba-v0.1.0.md`).
 
 - **Probar en Franc los casos de fallo**: conflictos, un fallo a mitad y
   Ctrl+C durante `apt` (la instalación real y los servicios ya funcionan).

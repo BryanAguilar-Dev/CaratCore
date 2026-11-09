@@ -1,6 +1,7 @@
 # Compiled binaries
 /caratcore
 /caratcore.exe
+/caratcore-linux-amd64
 *.exe
 
 # Editor and OS files

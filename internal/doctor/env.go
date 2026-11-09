@@ -18,6 +18,7 @@ type Env struct {
 
 	Hostname  func() (string, error)
 	ReadFile  func(path string) ([]byte, error)
+	Groups    func() ([]int, error) // group IDs of this process
 	LookPath  func(file string) (string, error)
 	Run       func(ctx context.Context, name string, args ...string) (string, error)
 	DiskUsage func(path string) (free, total uint64, err error)
@@ -33,6 +34,7 @@ func DefaultEnv() Env {
 		Euid:      os.Geteuid(),
 		Hostname:  os.Hostname,
 		ReadFile:  os.ReadFile,
+		Groups:    os.Getgroups,
 		LookPath:  exec.LookPath,
 		Run:       runCommand,
 		DiskUsage: diskUsage,

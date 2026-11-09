@@ -143,3 +143,50 @@ func TestReportVerdict(t *testing.T) {
 		t.Fatal("a FAIL must make the report fail")
 	}
 }
+
+func TestCheckPrivileges(t *testing.T) {
+	const group = "root:x:0:\nsudo:x:27:bryan\nusers:x:100:\n"
+	withSudo := func(env Env) Env {
+		env.LookPath = func(string) (string, error) { return "/usr/bin/sudo", nil }
+		return env
+	}
+	groups := func(ids ...int) func() ([]int, error) {
+		return func() ([]int, error) { return ids, nil }
+	}
+
+	tests := []struct {
+		name string
+		env  func() Env
+		want Status
+	}{
+		{"root", func() Env { e := fakeEnv(nil); e.Euid = 0; return e }, StatusOK},
+		{"no sudo", func() Env {
+			e := fakeEnv(nil)
+			e.LookPath = func(string) (string, error) { return "", os.ErrNotExist }
+			return e
+		}, StatusWarn},
+		{"in sudo group", func() Env {
+			e := withSudo(fakeEnv(map[string]string{"/etc/group": group}))
+			e.Groups = groups(100, 27)
+			return e
+		}, StatusOK},
+		{"not in sudo group", func() Env {
+			e := withSudo(fakeEnv(map[string]string{"/etc/group": group}))
+			e.Groups = groups(100)
+			return e
+		}, StatusWarn},
+		{"no sudo group in /etc/group", func() Env {
+			e := withSudo(fakeEnv(map[string]string{"/etc/group": "users:x:100:\n"}))
+			e.Groups = groups(100)
+			return e
+		}, StatusInfo},
+		{"groups unknown", func() Env { return withSudo(fakeEnv(map[string]string{"/etc/group": group})) }, StatusInfo},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := checkPrivileges(tt.env()); got.Status != tt.want {
+				t.Fatalf("got %v (%s), want %v", got.Status, got.Detail, tt.want)
+			}
+		})
+	}
+}

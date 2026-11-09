@@ -3,11 +3,10 @@
 CaratCore is an open source tool that helps you understand and build your own
 private infrastructure (a homelab) without hiding what happens on your machine.
 
-> **Status: early development.** `doctor` works and `install docker` installs
-> Docker (tested once on a real Debian 13 machine; failure cases not tested
-> yet). Deploying AdGuard Home and Uptime Kuma works (tested on the same
-> machine). Everything else described in
-> [docs/decisions.md](docs/decisions.md) is planned, not implemented.
+> **Status: early development.** `doctor`, installing Docker and deploying
+> AdGuard Home and Uptime Kuma work on Debian 13 amd64. Updating and removing
+> services, backups and rollback do not exist yet; see
+> [docs/decisions.md](docs/decisions.md) for what is planned.
 
 ## The idea
 
@@ -54,15 +53,16 @@ for each one, how CaratCore would install Docker Engine and Docker Compose
 following [Docker's official guide for Debian](https://docs.docker.com/engine/install/debian/).
 Nothing is executed. Add `--json` to get the plan as JSON. Unlike the guide,
 CaratCore does not download Docker's signing key: the key is built into the
-binary and a test checks its fingerprint against the one Docker publishes. If Docker and Compose
-are already installed, the plan is empty. CaratCore refuses to plan (and
+binary and a test checks its fingerprint against the one Docker publishes.
+If Docker and Compose are already installed, the plan is empty. CaratCore refuses to plan (and
 explains why) on unsupported platforms, when packages that conflict with
 Docker's are installed, or when Docker is installed without Compose: it never
 removes or changes an existing installation.
 
 `caratcore install docker` (without `--dry-run`) shows the same plan and asks
 you to type `yes` before running it. Steps that need root run through `sudo`
-(sudo asks for your password; CaratCore never sees it). Each command is printed
+(sudo asks for your password; CaratCore never sees it), or directly if you
+run CaratCore as root. Each command is printed
 before it runs. If a step fails, CaratCore stops, tells you which steps were
 done and which were not, and undoes nothing; fix the problem and run the
 command again. CaratCore never adds your user to the `docker` group, because
@@ -100,20 +100,50 @@ and the internet cannot. To keep it that way:
 
 ## Install
 
-CaratCore is a single static binary: you do not need Go to run it. Download it
-from the [Releases](https://github.com/BryanAguilar-Dev/CaratCore/releases)
-page, check it and run it (replace `vX.Y.Z` with the version you want):
+CaratCore is a single static binary: you do not need Go or anything else to
+run it. Everything it installs (Docker, Compose, the services) is part of the
+plans it shows you.
+
+### From a fresh Debian 13
+
+**1. Make sure you can use sudo.** If you set a root password while installing
+Debian, the installer did not install sudo. Either run CaratCore as root, or
+set up sudo once (as root, replacing `<user>` with your user name):
 
 ```
-curl -fLO https://github.com/BryanAguilar-Dev/CaratCore/releases/download/vX.Y.Z/caratcore-linux-amd64
-curl -fLO https://github.com/BryanAguilar-Dev/CaratCore/releases/download/vX.Y.Z/SHA256SUMS
-sha256sum -c SHA256SUMS --ignore-missing
+su -
+apt install sudo
+adduser <user> sudo
+exit
+```
+
+Then log out and log in again, so your session joins the `sudo` group.
+
+**2. Download CaratCore and check it.** Replace `vX.Y.Z` with the version from
+the [Releases](https://github.com/BryanAguilar-Dev/CaratCore/releases) page.
+`wget` comes with Debian (if it is missing: `sudo apt install wget`).
+
+```
+wget https://github.com/BryanAguilar-Dev/CaratCore/releases/download/vX.Y.Z/caratcore-linux-amd64
+wget https://github.com/BryanAguilar-Dev/CaratCore/releases/download/vX.Y.Z/SHA256SUMS
+sha256sum -c SHA256SUMS
 chmod +x caratcore-linux-amd64
-./caratcore-linux-amd64 doctor
 ```
 
-`sha256sum -c` must print `OK`; if not, do not run the file. There is no
-`curl | sh` installer on purpose: you should see what runs on your machine.
+`sha256sum -c` must print `caratcore-linux-amd64: OK`; if not, do not run the
+file. There is no `curl | sh` installer on purpose: you should see what runs
+on your machine.
+
+**3. Check the machine, install Docker, deploy the services.** Each `install`
+shows its plan and waits for you to type `yes`. Add `--dry-run` to only see
+the plan.
+
+```
+./caratcore-linux-amd64 doctor
+./caratcore-linux-amd64 install docker
+./caratcore-linux-amd64 install adguard-home
+./caratcore-linux-amd64 install uptime-kuma
+```
 
 ## Build and test
 

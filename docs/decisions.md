@@ -71,7 +71,8 @@ explícitamente) o **Pendiente**.
   - Workflow propio en vez de GoReleaser: para un solo binario basta y hay una
     herramienta menos que entender.
   - Sin instalador `curl | sh`, por coherencia con la idea del proyecto.
-  - No se publica una versión sin haberla probado en Franc (ver D19).
+  - No se publica una versión sin haberla probado en Franc o en una VM
+    Debian limpia (ver D19 y D28).
 - **D16. CI** (2026-11-09): `ci.yml` pasa `gofmt`, `go vet` y `go test` en cada
   push a `main` y en cada pull request.
 - **D17. Docker siempre con sudo, nunca con el grupo `docker`** (2026-11-09).
@@ -175,6 +176,25 @@ explícitamente) o **Pendiente**.
   versión nueva de CaratCore (como con las imágenes fijas de D23). El plan
   muestra la clave entera; el motivo del paso incluye la huella y el comando
   para comprobarla.
+- **D27. `doctor` mira el grupo `sudo`** (2026-11-09). Antes solo veía que
+  sudo existía. Ahora: OK si el proceso está en el grupo `sudo` (el que
+  Debian autoriza por defecto en sudoers), WARN si no lo está o si sudo no
+  está instalado (con los comandos para arreglarlo), e INFO si no se puede
+  saber. No se ejecuta `sudo -n` porque `doctor` nunca ejecuta sudo. Es una
+  pista, no una prueba: sudoers puede configurarse de otra forma; la prueba
+  real sigue siendo `sudo -v` en el ejecutor (D18). Se usan los grupos del
+  proceso, que son los de la sesión, como los ve sudo: tras `adduser` hay que
+  volver a entrar. CaratCore no instala sudo: hacerlo ya exige ser root y
+  cambiar quién tiene privilegios es decisión del usuario; el README explica
+  cómo.
+- **D28. La v0.1.0 se prueba en una VM Debian 13 limpia** (2026-11-09).
+  Complementa D19: Franc ya tiene Docker y servicios, así que no sirve para
+  probar una instalación desde cero. La lista está en
+  `docs/prueba-v0.1.0.md`: se prueba un binario compilado con las mismas
+  opciones que `release.yml`, después se etiqueta, se publica el borrador y se
+  repite la descarga del README con la versión publicada. No hace falta un
+  pre-instalador: el binario es estático (sin Go ni librerías), y lo único que
+  necesita es root o sudo.
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
@@ -185,8 +205,6 @@ explícitamente) o **Pendiente**.
 - Estado persistente (archivo o SQLite), rollback y actualizaciones.
 - AdGuard Home como DNS de Tailscale: riesgo de perder internet si el servidor
   se apaga; necesita DNS de respaldo.
-- `doctor` solo detecta que sudo existe; el ejecutor ya lo comprueba con
-  `sudo -v` antes de ejecutar (D18).
 - Umbrales de RAM y disco de `doctor`: son estimaciones, hay que medirlas con
   los servicios reales.
 - Probar los casos de fallo de `doctor` en una máquina real.
