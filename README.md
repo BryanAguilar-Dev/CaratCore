@@ -80,6 +80,22 @@ wizard on port 3000).
 | AdGuard Home | blocks ads and trackers for the devices that use it as DNS | 53 (DNS), 3000 (web) |
 | Uptime Kuma | checks that your services are up and alerts you | 3001 (web) |
 
+## Network exposure
+
+The ports in the table above are open to every network the machine is on,
+**even if you use a firewall such as ufw**. Docker adds its own firewall rules
+for published ports, and they are applied before ufw's
+([Docker's documentation](https://docs.docker.com/engine/network/packet-filtering-firewalls/)).
+
+CaratCore is meant for a home server behind a router. In that case, devices
+on your local network and on your Tailscale network can reach the services,
+and the internet cannot. To keep it that way:
+
+- Do not forward ports 53, 3000 or 3001 on your router.
+- Do not deploy these services on a machine with a public IP address (for
+  example, a VPS) unless you filter the traffic yourself, for instance in
+  Docker's `DOCKER-USER` chain. Otherwise anyone could use your DNS server.
+
 ## Install
 
 CaratCore is a single static binary: you do not need Go to run it. Download it

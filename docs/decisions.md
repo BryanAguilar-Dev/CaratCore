@@ -153,6 +153,16 @@ explícitamente) o **Pendiente**.
   preguntárselo a Docker exige sudo (D17) y `doctor` no lo usa. Si el
   contenedor está parado y otro programa ocupa el puerto, `doctor` no lo
   verá.
+- **D25. Puertos publicados y cortafuegos: se documenta, no se limita**
+  (2026-11-09). Docker desvía los puertos publicados en la tabla `nat` antes
+  de la cadena `INPUT` que usa ufw, así que ufw no los bloquea. Se descartan
+  dos alternativas: publicar en `127.0.0.1`, que rompe el acceso desde la red
+  local y desde Tailscale, y publicar en la IP de Tailscale, que hace fallar
+  el arranque del contenedor si Tailscale aún no está levantado. El objetivo
+  de la v1 es un servidor doméstico detrás de un router, donde la exposición a
+  la red local es la deseada. El README advierte de no abrir los puertos en el
+  router ni desplegar en una máquina con IP pública (resolvedor DNS abierto)
+  sin filtrar con `DOCKER-USER`.
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
@@ -173,8 +183,6 @@ explícitamente) o **Pendiente**.
 - Hecho (2026-11-09): AdGuard Home y Uptime Kuma desplegados en Franc con
   `install <servicio>`; las etiquetas de imagen existen y funcionan.
 - Actualizar servicios (cambiar la versión de la imagen) y desinstalarlos.
-- Puertos publicados por Docker se saltan el cortafuegos (ufw/nftables): el
-  DNS de AdGuard queda abierto a la red local. Documentarlo o limitarlo.
 - Probar en Franc: la detección de conflictos, un fallo a mitad y Ctrl+C
   durante `apt`. Hecho (2026-11-09): instalación real completa con
   `install docker`; con el usuario fuera del grupo `docker`, `doctor` muestra

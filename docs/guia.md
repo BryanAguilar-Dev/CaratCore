@@ -245,6 +245,13 @@ Docker puede arrancar un contenedor con `/` montado y ser root. Meter al
 usuario en el grupo es darle root sin contraseña. CaratCore usa
 `sudo docker ...` y `doctor` lo trata como normal (INFO).
 
+**Por qué ufw no protege los servicios.** Linux filtra los paquetes en
+cadenas. ufw pone sus reglas en `INPUT`, que filtra lo que va dirigido a la
+propia máquina. Docker, al publicar un puerto, reescribe el destino en la
+tabla `nat` (PREROUTING) hacia la IP del contenedor, así que el paquete pasa
+a la cadena `FORWARD` y nunca llega a `INPUT`. Por eso CaratCore lo avisa en
+el README en vez de prometer una protección que no da (D25).
+
 ## 5. Cómo se prueba
 
 ```
@@ -310,3 +317,5 @@ descargado es exactamente el publicado.
 14. ¿Por qué `pull` y `up` son dos pasos y no uno?
 15. ¿En qué caso `doctor` daría OK a un puerto que en realidad ocupa otro
     programa, y por qué se acepta?
+16. Si activas ufw con `deny incoming`, ¿por qué el puerto 3000 sigue
+    respondiendo desde otro equipo de la red?
