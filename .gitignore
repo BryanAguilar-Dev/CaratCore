@@ -1,0 +1,10 @@
+# Compiled binaries
+/caratcore
+/caratcore.exe
+*.exe
+
+# Editor and OS files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
