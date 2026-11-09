@@ -5,7 +5,8 @@ private infrastructure (a homelab) without hiding what happens on your machine.
 
 > **Status: early development.** `doctor` works and `install docker` installs
 > Docker (tested once on a real Debian 13 machine; failure cases not tested
-> yet). Everything else described in
+> yet). Deploying AdGuard Home and Uptime Kuma is implemented but not yet
+> tested on a real machine. Everything else described in
 > [docs/decisions.md](docs/decisions.md) is planned, not implemented.
 
 ## The idea
@@ -63,6 +64,20 @@ before it runs. If a step fails, CaratCore stops, tells you which steps were
 done and which were not, and undoes nothing; fix the problem and run the
 command again. CaratCore never adds your user to the `docker` group, because
 that is equivalent to giving it root: use `sudo docker ...`.
+
+`caratcore install adguard-home` and `caratcore install uptime-kuma` deploy
+those services with Docker Compose, with the same plan, `--dry-run` and
+approval as Docker. Each service lives in `/opt/caratcore/<service>/`: its
+`compose.yaml` (readable, with a pinned image version) and its data folders.
+CaratCore refuses to deploy when Docker is missing, when a port is used by
+another program, or when you edited the `compose.yaml` it wrote. After
+installing, it tells you what to do next (for example, AdGuard Home's setup
+wizard on port 3000). Not tested on a real machine yet.
+
+| Service | What it does | Ports |
+|---|---|---|
+| AdGuard Home | blocks ads and trackers for the devices that use it as DNS | 53 (DNS), 3000 (web) |
+| Uptime Kuma | checks that your services are up and alerts you | 3001 (web) |
 
 ## Install
 

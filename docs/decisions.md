@@ -110,12 +110,6 @@ explícitamente) o **Pendiente**.
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
   ninguna base técnica.
-- **P2. Despliegue con Docker Compose.** CaratCore genera y explica los
-  archivos y ejecuta `docker compose`; no hay motor de despliegue propio.
-- **P3. Catálogo de servicios en YAML** incrustado con `go:embed`, y el plan de
-  instalación como dato serializable separado de la ejecución.
-- **P4. Servicios de la v1:** AdGuard Home (bloqueo de anuncios) y Uptime Kuma
-  (monitorización). Tailscale se detecta, no se instala.
 - **P5. Ejecutable de terminal**, no un servicio en segundo plano.
 
 ## Pendientes
@@ -129,13 +123,66 @@ explícitamente) o **Pendiente**.
 - Probar los casos de fallo de `doctor` en una máquina real.
 - Verificar la huella de la clave GPG de Docker además de descargarla por
   HTTPS (la guía oficial solo la descarga).
+- Probar en Franc el despliegue real de AdGuard Home y Uptime Kuma, y
+  confirmar que las etiquetas de imagen existen en Docker Hub.
+- `doctor` marca WARN los puertos ocupados aunque los ocupe un servicio que
+  desplegó CaratCore; debería reconocerlo.
+- Actualizar servicios (cambiar la versión de la imagen) y desinstalarlos.
+- Puertos publicados por Docker se saltan el cortafuegos (ufw/nftables): el
+  DNS de AdGuard queda abierto a la red local. Documentarlo o limitarlo.
 - Probar en Franc: la detección de conflictos, un fallo a mitad y Ctrl+C
   durante `apt`. Hecho (2026-11-09): instalación real completa con
   `install docker`; con el usuario fuera del grupo `docker`, `doctor` muestra
   el Engine como INFO y `sudo docker ps` funciona.
+- **D20. Servicios de la v1: AdGuard Home y Uptime Kuma** (2026-11-09; antes
+  P4). Solo dos: lo difícil de la v1 es la parte que despliega (compose,
+  datos, puertos, comprobación, actualización), y con dos servicios se
+  construye y se valida. AdGuard Home en lugar de Pi-hole: un solo contenedor
+  oficial, DNS cifrado (DoH/DoT) incluido y buena interfaz web. Uptime Kuma
+  avisa si un servicio cae sin necesitar HTTPS. Tailscale se detecta, no se
+  instala.
+- **D21. Despliegue con Docker Compose** (2026-11-09; antes P2). CaratCore
+  genera y explica los archivos y ejecuta `sudo docker compose`; no hay motor
+  de despliegue propio.
+- **D22. Catálogo en JSON, no YAML** (2026-11-09; antes P3). Leer YAML exige
+  una dependencia externa y la regla es usar solo la librería estándar
+  (`encoding/json`). El catálogo va incrustado con `go:embed`. El
+  `compose.yaml` se genera con `text/template`, porque escribir YAML no
+  necesita ninguna librería; leerlo, sí.
+- **D23. Despliegue de servicios** (2026-11-09), paquetes `internal/catalog`
+  y `internal/service`:
+  - Cada servicio vive en `/opt/caratcore/<id>/`: su `compose.yaml` y sus
+    carpetas de datos (bind mounts, 0700 porque guardan hashes de
+    contraseñas). Todo en un sitio que se puede leer y copiar.
+  - Imágenes con versión fija, nunca `latest`; el catálogo lo valida. La misma
+    versión de CaratCore despliega siempre lo mismo. Versiones comprobadas en
+    las releases de GitHub (2026-11-09): AdGuard Home v0.107.80 y Uptime Kuma
+    2.5.9 (`latest` de Uptime Kuma sigue apuntando a la 1.x).
+  - Plan de 4 pasos, todos con sudo (D17): crear carpetas, escribir
+    `compose.yaml`, `docker compose pull` y `docker compose up --detach`. El
+    `pull` va aparte para que un fallo de red pare antes de arrancar nada.
+    `restart: unless-stopped` arranca el servicio al encender la máquina.
+  - Se niega si no hay Docker y Compose, si un puerto está ocupado por otro
+    programa, o si existe un `compose.yaml` distinto del que generaría (lo
+    editó el usuario u otra versión): no se toca. Si es idéntico, el plan se
+    repite sin riesgo, así que relanzar tras un fallo funciona (como en D18).
+  - AdGuard Home en red bridge, publicando solo 53/tcp, 53/udp y 3000. Sin
+    DHCP ni DNS cifrado por ahora. Su asistente propone el puerto 80 para el
+    panel; hay que dejar el 3000, y CaratCore lo indica en los pasos
+    siguientes. No se preconfigura `AdGuardHome.yaml` porque obligaría a
+    CaratCore a manejar la contraseña del administrador.
+  - La lectura de puertos de `/proc/net` sale de `doctor` a `internal/ports`;
+    los puertos que comprueba `doctor` salen del catálogo.
 
 ## Ideas fuera de la v1
 Interfaz web, otras distribuciones, GPU y recomendador avanzado, backups,
 monetización (no antes de tener usuarios), paquete `.deb` o repositorio apt
 para actualizar con `apt upgrade`, binarios para arm64 (Raspberry Pi),
 firma de releases.
+
+Servicios candidatos para la v1.1, en orden: **Homepage** (panel con enlaces
+a los servicios; sin base de datos, configurado con archivos que CaratCore
+puede generar y explicar) y **Vaultwarden** (gestor de contraseñas; exige
+antes HTTPS, probablemente con `tailscale serve`, y backups). Descartados por
+ahora: Nextcloud e Immich (pesados, mucho mantenimiento) y Jellyfin (depende
+demasiado del hardware).

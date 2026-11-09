@@ -27,6 +27,9 @@ internal/             el núcleo. "internal" = otros proyectos no pueden importa
   plan/               el plan de instalación como dato
   docker/             detecta Docker y genera el plan para instalarlo
   runner/             ejecuta un plan paso a paso (con sudo si hace falta)
+  catalog/            los servicios disponibles (services.json incrustado)
+  service/            genera el plan que despliega un servicio con Compose
+  ports/              qué puertos están ocupados (lee /proc/net)
 docs/                 decisiones y esta guía
 go.mod                nombre del módulo y versión de Go; sin dependencias externas
 .gitattributes        fuerza finales de línea LF (estilo Linux)
@@ -192,6 +195,46 @@ Confirmar es cosa de la CLI (`confirm` en `install.go`), no de `runner`: el
 núcleo no sabe si hay una persona delante. Recibe `io.Reader`/`io.Writer`, así
 que también se podría probar con un `strings.Reader`.
 
+### catalog (qué servicios hay)
+`services.json` describe cada servicio: imagen, puertos, carpetas de datos y
+qué hacer después de instalar. Va **dentro del binario** gracias a
+`//go:embed services.json`: Go copia el archivo en una variable `[]byte` al
+compilar, así que el usuario sigue teniendo un solo ejecutable. Añadir un
+servicio es editar datos, no código.
+
+Al leerlo, `validate()` rechaza lo peligroso: imágenes sin versión o con
+`latest`, IDs con espacios o mayúsculas (se convierten en rutas), textos con
+saltos de línea o `#` (romperían el YAML). El test
+`TestEmbeddedCatalogIsValid` hace que un `services.json` mal editado no pase
+CI.
+
+Por qué JSON y no YAML: Go trae `encoding/json` de serie; para leer YAML
+haría falta una librería externa.
+
+### service (desplegar un servicio)
+Mismo patrón que `docker`: `Detect` lee la máquina (¿hay Docker y Compose?
+¿qué puertos están ocupados? ¿existe ya el `compose.yaml`?) y `DeployPlan`
+es una función pura que devuelve el plan.
+
+El `compose.yaml` se genera con `text/template`, la librería de plantillas de
+Go: `{{.Service.Image}}` inserta un campo y `{{range .Service.Ports}}` repite
+un bloque por cada puerto. `{{-` borra el salto de línea anterior, para que
+el resultado quede limpio. Dentro de un `range`, `$` es el dato raíz: así
+`{{$.Dir}}` llega a la carpeta del servicio.
+
+La parte más sutil es **repetir un plan**. Si existe un `compose.yaml`:
+- idéntico al que CaratCore generaría: es nuestro, se puede repetir (y no se
+  comprueban puertos, porque probablemente los ocupa el propio servicio);
+- distinto: lo cambió el usuario u otra versión, y CaratCore no lo toca.
+
+Comparar el contenido entero es más sencillo y más seguro que guardar un
+"estado" aparte, que todavía no existe.
+
+### ports
+`InUse` lee `/proc/net/{tcp,udp}[6]` y devuelve claves como `"53/udp"`.
+Antes vivía dentro de `doctor`; al necesitarlo también `service`, se movió a
+su paquete (lo mismo que pasó con `osrelease`).
+
 **Por qué nunca el grupo `docker`.** Quien puede hablar con el demonio de
 Docker puede arrancar un contenedor con `/` montado y ser root. Meter al
 usuario en el grupo es darle root sin contraseña. CaratCore usa
@@ -236,8 +279,9 @@ descargado es exactamente el publicado.
 
 - **Probar el instalador en Franc**: instalación real, un fallo a mitad y
   Ctrl+C durante `apt`.
-- **Servicios**: AdGuard Home y Uptime Kuma con Docker Compose, con su
-  catálogo en JSON incrustado (`go:embed`).
+- **Probar los servicios en Franc**: AdGuard Home y Uptime Kuma.
+- **Gestionar servicios**: actualizar la versión, desinstalar, y que `doctor`
+  reconozca los puertos de servicios ya desplegados.
 - Pendientes de seguridad y diseño: ver la sección "Pendientes" de
   [decisions.md](decisions.md).
 
@@ -256,3 +300,8 @@ descargado es exactamente el publicado.
 9. ¿Por qué `runner` usa `exec.Command` y no `exec.CommandContext`?
 10. ¿Qué pasaría si `confirm` aceptara una respuesta vacía como "sí"?
 11. ¿Por qué el temporal de un paso `File` se crea con permisos 0600?
+12. ¿Qué problema evitaría fijar la versión de la imagen en vez de usar
+    `latest`?
+13. Si relanzas `install adguard-home` con AdGuard ya en marcha, ¿por qué no
+    falla por "puerto ocupado"?
+14. ¿Por qué `pull` y `up` son dos pasos y no uno?

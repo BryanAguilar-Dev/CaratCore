@@ -33,23 +33,6 @@ func TestParseMeminfo(t *testing.T) {
 	}
 }
 
-func TestParseListeningPorts(t *testing.T) {
-	tcp := "  sl  local_address rem_address   st tx_queue rx_queue\n" +
-		"   0: 00000000:0BB8 00000000:0000 0A 00000000:00000000 00:00000000\n" +
-		"   1: 0100007F:0BB9 00000000:0000 01 00000000:00000000 00:00000000\n"
-	got := parseListeningPorts(tcp, false)
-	if !got[3000] {
-		t.Error("port 3000 should be listening")
-	}
-	if got[3001] {
-		t.Error("port 3001 is not in LISTEN state and must be ignored")
-	}
-	udp := "  sl  local_address rem_address   st\n   0: 0100007F:0035 00000000:0000 07 00000000:00000000\n"
-	if !parseListeningPorts(udp, true)[53] {
-		t.Error("udp port 53 should be bound")
-	}
-}
-
 func TestParseDockerVersion(t *testing.T) {
 	if got := parseDockerVersion("Docker version 29.9.1, build dfc520d\n"); got != "29.9.1" {
 		t.Fatalf("got %q", got)

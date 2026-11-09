@@ -13,21 +13,24 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BryanAguilar-Dev/CaratCore/internal/catalog"
 	"github.com/BryanAguilar-Dev/CaratCore/internal/docker"
 	"github.com/BryanAguilar-Dev/CaratCore/internal/plan"
 	"github.com/BryanAguilar-Dev/CaratCore/internal/runner"
+	"github.com/BryanAguilar-Dev/CaratCore/internal/service"
 )
 
-const installUsage = "usage: caratcore install docker [--dry-run [--json]]"
+const installUsage = "usage: caratcore install <docker|adguard-home|uptime-kuma> [--dry-run [--json]]"
 
 // runInstall handles `caratcore install <target> [flags]`.
 func runInstall(args []string) int {
-	if len(args) == 0 || args[0] != "docker" {
+	if len(args) == 0 || strings.HasPrefix(args[0], "-") {
 		fmt.Fprintln(os.Stderr, installUsage)
 		return 2
 	}
+	target := args[0]
 
-	flags := flag.NewFlagSet("install docker", flag.ContinueOnError)
+	flags := flag.NewFlagSet("install "+target, flag.ContinueOnError)
 	dryRun := flags.Bool("dry-run", false, "show the plan without executing anything")
 	asJSON := flags.Bool("json", false, "print the plan as JSON (only with --dry-run)")
 	if err := flags.Parse(args[1:]); err != nil {
@@ -38,11 +41,34 @@ func runInstall(args []string) int {
 		return 2
 	}
 
-	p, err := dockerPlan()
+	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
+	defer cancel()
+
+	var p plan.Plan
+	var nextSteps []string
+	var err error
+	if target == "docker" {
+		p, err = dockerPlan(ctx)
+		nextSteps = []string{"Check the result with: caratcore doctor"}
+	} else {
+		var s catalog.Service
+		if s, err = catalog.Get(target); err == nil {
+			p, err = servicePlan(ctx, s)
+			nextSteps = s.NextSteps
+		}
+	}
+	if err == nil {
+		err = p.Validate()
+		if err != nil {
+			// A bug in CaratCore, not in the user's system.
+			err = fmt.Errorf("internal error: invalid plan: %w", err)
+		}
+	}
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "%v\n", err)
 		return 1
 	}
+
 	if err := printPlan(os.Stdout, p, *asJSON); err != nil {
 		fmt.Fprintf(os.Stderr, "error: %v\n", err)
 		return 1
@@ -50,13 +76,10 @@ func runInstall(args []string) int {
 	if *dryRun || len(p.Steps) == 0 {
 		return 0
 	}
-	return execute(p)
+	return execute(p, nextSteps)
 }
 
-func dockerPlan() (plan.Plan, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Second)
-	defer cancel()
-
+func dockerPlan(ctx context.Context) (plan.Plan, error) {
 	host, err := docker.Detect(ctx)
 	if err != nil {
 		return plan.Plan{}, fmt.Errorf("error: %w", err)
@@ -65,15 +88,23 @@ func dockerPlan() (plan.Plan, error) {
 	if err != nil {
 		return p, fmt.Errorf("cannot plan the Docker installation: %w", err)
 	}
-	if err := p.Validate(); err != nil {
-		// A bug in CaratCore, not in the user's system.
-		return p, fmt.Errorf("internal error: invalid plan: %w", err)
+	return p, nil
+}
+
+func servicePlan(ctx context.Context, s catalog.Service) (plan.Plan, error) {
+	host, err := service.Detect(ctx, s)
+	if err != nil {
+		return plan.Plan{}, fmt.Errorf("error: %w", err)
+	}
+	p, err := service.DeployPlan(s, host)
+	if err != nil {
+		return p, fmt.Errorf("cannot plan the deployment of %s: %w", s.Name, err)
 	}
 	return p, nil
 }
 
-// execute asks the user to approve p and runs it.
-func execute(p plan.Plan) int {
+// execute asks the user to approve p, runs it and then says what to do next.
+func execute(p plan.Plan, nextSteps []string) int {
 	if !confirm(os.Stdin, os.Stdout, len(p.Steps)) {
 		fmt.Println("Cancelled. Nothing was executed.")
 		return 1
@@ -88,7 +119,10 @@ func execute(p plan.Plan) int {
 	var stepErr *runner.StepError
 	switch {
 	case err == nil:
-		fmt.Println("\nDone. Check the result with: caratcore doctor")
+		fmt.Println("\nDone. Next:")
+		for _, step := range nextSteps {
+			fmt.Println("  - " + step)
+		}
 		return 0
 	case errors.As(err, &stepErr):
 		fmt.Fprintf(os.Stderr, "\n%v\n", err)

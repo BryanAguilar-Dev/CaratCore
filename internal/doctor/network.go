@@ -5,89 +5,44 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"sort"
 	"strconv"
 	"strings"
+
+	"github.com/BryanAguilar-Dev/CaratCore/internal/catalog"
+	"github.com/BryanAguilar-Dev/CaratCore/internal/ports"
 )
 
-// requiredPorts are the ports the planned services need: DNS for AdGuard Home,
-// its first-run setup page, and Uptime Kuma.
-var requiredPorts = []int{53, 3000, 3001}
-
+// checkPorts reports whether the ports of the catalog services are free. A
+// port in use may be a service CaratCore already deployed, so it is a WARN,
+// not a FAIL.
 func checkPorts(env Env) Check {
-	sources := []struct {
-		path  string
-		udp   bool
-		proto string
-	}{
-		{"/proc/net/tcp", false, "tcp"},
-		{"/proc/net/tcp6", false, "tcp"},
-		{"/proc/net/udp", true, "udp"},
-		{"/proc/net/udp6", true, "udp"},
+	services, err := catalog.All()
+	if err != nil {
+		return newCheck("Ports", StatusWarn, "%v", err)
+	}
+	inUse, err := ports.InUse(env.ReadFile)
+	if err != nil {
+		return newCheck("Ports", StatusWarn, "%v", err)
 	}
 
-	inUse := map[string]bool{}
-	readAny := false
-	for _, src := range sources {
-		data, err := env.ReadFile(src.path)
-		if err != nil {
-			continue
-		}
-		readAny = true
-		listening := parseListeningPorts(string(data), src.udp)
-		for _, port := range requiredPorts {
-			if listening[port] {
-				inUse[fmt.Sprintf("%d/%s", port, src.proto)] = true
+	var numbers []string
+	var busy []string
+	seen := map[string]bool{}
+	for _, s := range services {
+		for _, p := range s.Ports {
+			if n := strconv.Itoa(p.Port); !seen[n] {
+				seen[n] = true
+				numbers = append(numbers, n)
+			}
+			if key := ports.Key(p.Port, p.Protocol); inUse[key] {
+				busy = append(busy, fmt.Sprintf("%s (%s)", key, s.Name))
 			}
 		}
 	}
-	if !readAny {
-		return newCheck("Ports", StatusWarn, "could not read /proc/net to check ports")
+	if len(busy) == 0 {
+		return newCheck("Ports", StatusOK, "%s are free", strings.Join(numbers, ", "))
 	}
-	if len(inUse) == 0 {
-		return newCheck("Ports", StatusOK, "%s are free", portList())
-	}
-	names := make([]string, 0, len(inUse))
-	for name := range inUse {
-		names = append(names, name)
-	}
-	sort.Strings(names)
-	return newCheck("Ports", StatusWarn, "in use: %s (may conflict with AdGuard Home or Uptime Kuma)", strings.Join(names, ", "))
-}
-
-func portList() string {
-	parts := make([]string, len(requiredPorts))
-	for i, port := range requiredPorts {
-		parts[i] = strconv.Itoa(port)
-	}
-	return strings.Join(parts, ", ")
-}
-
-// parseListeningPorts returns the local ports that are listening (TCP, state
-// 0A) or bound (UDP, state 07) in a /proc/net/{tcp,udp}[6] file. Reading /proc
-// needs no root, unlike `ss -p`.
-func parseListeningPorts(data string, udp bool) map[int]bool {
-	wantState := "0A"
-	if udp {
-		wantState = "07"
-	}
-	ports := map[int]bool{}
-	for _, line := range strings.Split(data, "\n") {
-		fields := strings.Fields(line)
-		if len(fields) < 4 || fields[3] != wantState {
-			continue
-		}
-		_, hexPort, found := strings.Cut(fields[1], ":")
-		if !found {
-			continue
-		}
-		port, err := strconv.ParseUint(hexPort, 16, 16)
-		if err != nil {
-			continue
-		}
-		ports[int(port)] = true
-	}
-	return ports
+	return newCheck("Ports", StatusWarn, "in use: %s", strings.Join(busy, ", "))
 }
 
 func checkInternet(ctx context.Context, env Env) Check {

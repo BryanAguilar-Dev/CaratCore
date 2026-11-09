@@ -1,0 +1,38 @@
+[
+  {
+    "id": "adguard-home",
+    "name": "AdGuard Home",
+    "description": "Blocks ads and trackers for every device that uses this machine as its DNS server.",
+    "image": "adguard/adguardhome:v0.107.80",
+    "ports": [
+      {"port": 53, "protocol": "tcp", "purpose": "DNS"},
+      {"port": 53, "protocol": "udp", "purpose": "DNS"},
+      {"port": 3000, "protocol": "tcp", "purpose": "web interface"}
+    ],
+    "volumes": [
+      {"name": "work", "target": "/opt/adguardhome/work", "purpose": "query log, statistics and filter lists"},
+      {"name": "conf", "target": "/opt/adguardhome/conf", "purpose": "configuration, including the admin password hash"}
+    ],
+    "next_steps": [
+      "Open http://<this machine>:3000 and complete the setup wizard.",
+      "In the wizard, keep the admin web interface on port 3000 (it suggests 80): CaratCore only publishes port 3000.",
+      "Then set this machine as the DNS server of your router or of each device."
+    ]
+  },
+  {
+    "id": "uptime-kuma",
+    "name": "Uptime Kuma",
+    "description": "Checks that your services and websites are up and alerts you when one goes down.",
+    "image": "louislam/uptime-kuma:2.5.9",
+    "ports": [
+      {"port": 3001, "protocol": "tcp", "purpose": "web interface"}
+    ],
+    "volumes": [
+      {"name": "data", "target": "/app/data", "purpose": "monitors, history and the admin account"}
+    ],
+    "next_steps": [
+      "Open http://<this machine>:3001 and create the admin account.",
+      "Add a monitor for each service you want to watch, for example AdGuard Home on port 3000."
+    ]
+  }
+]
