@@ -61,6 +61,20 @@ explícitamente) o **Pendiente**.
   `docker`.
 - **D14. Finales de línea LF** (2026-11-09): `.gitattributes` fuerza LF
   también en Windows, porque CaratCore genera archivos para Linux.
+- **D15. Distribución como binario** (2026-11-09): el usuario no necesita Go.
+  - Al subir una etiqueta `v*`, GitHub Actions (`release.yml`) pasa vet y
+    tests, compila `caratcore-linux-amd64` estático (`CGO_ENABLED=0`) y crea
+    una release en **borrador** con el binario y `SHA256SUMS`. Una persona la
+    revisa y la publica.
+  - La versión se graba al compilar (`-X main.version=...`); `caratcore
+    version` la muestra. Compilaciones locales dicen `dev`.
+  - Workflow propio en vez de GoReleaser: para un solo binario basta y hay una
+    herramienta menos que entender.
+  - Sin instalador `curl | sh`, por coherencia con la idea del proyecto.
+  - No se publica una versión sin haberla probado en Franc (`doctor`,
+    `--dry-run`) y en la VM Debian limpia.
+- **D16. CI** (2026-11-09): `ci.yml` pasa `gofmt`, `go vet` y `go test` en cada
+  push a `main` y en cada pull request.
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
@@ -91,4 +105,6 @@ explícitamente) o **Pendiente**.
 
 ## Ideas fuera de la v1
 Interfaz web, otras distribuciones, GPU y recomendador avanzado, backups,
-monetización (no antes de tener usuarios).
+monetización (no antes de tener usuarios), paquete `.deb` o repositorio apt
+para actualizar con `apt upgrade`, binarios para arm64 (Raspberry Pi),
+firma de releases.

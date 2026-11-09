@@ -55,6 +55,23 @@ explains why) on unsupported platforms, when packages that conflict with
 Docker's are installed, or when Docker is installed without Compose: it never
 removes or changes an existing installation.
 
+## Install
+
+CaratCore is a single static binary: you do not need Go to run it. Download it
+from the [Releases](https://github.com/BryanAguilar-Dev/CaratCore/releases)
+page, check it and run it (replace `vX.Y.Z` with the version you want):
+
+```
+curl -fLO https://github.com/BryanAguilar-Dev/CaratCore/releases/download/vX.Y.Z/caratcore-linux-amd64
+curl -fLO https://github.com/BryanAguilar-Dev/CaratCore/releases/download/vX.Y.Z/SHA256SUMS
+sha256sum -c SHA256SUMS --ignore-missing
+chmod +x caratcore-linux-amd64
+./caratcore-linux-amd64 doctor
+```
+
+`sha256sum -c` must print `OK`; if not, do not run the file. There is no
+`curl | sh` installer on purpose: you should see what runs on your machine.
+
 ## Build and test
 
 Requires Go 1.26.4 or newer.

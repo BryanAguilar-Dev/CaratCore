@@ -169,7 +169,30 @@ Los tests nunca tocan el sistema: usan `Env` falsos (doctor) o `Host`
 inventados (docker). La prueba real del instalador se hará solo en una VM
 Debian limpia, nunca en Franc.
 
-## 6. Qué falta y hacia dónde va
+## 6. Cómo llega CaratCore al usuario
+
+Go compila todo en **un único ejecutable**. Con `CGO_ENABLED=0` ni siquiera
+usa librerías de C del sistema: el archivo funciona en cualquier Linux amd64
+sin instalar nada. Por eso el usuario no necesita Go.
+
+Compilar para otro sistema ("compilación cruzada") es cambiar dos variables:
+`GOOS=linux GOARCH=amd64 go build ...` desde Windows produce un binario Linux.
+
+La automatización vive en `.github/workflows/`:
+- `ci.yml`: en cada push comprueba formato, vet y tests en los servidores de
+  GitHub. Si algo falla, lo ves en la pestaña *Actions*.
+- `release.yml`: al subir una etiqueta (`git tag v0.1.0` y
+  `git push origin v0.1.0`) compila el binario, calcula su SHA-256 y crea una
+  release en borrador. Revisas y pulsas "Publish".
+
+La versión se mete en el binario al compilar:
+`-ldflags "-X main.version=v0.1.0"` sobrescribe la variable `version` de
+`main.go`. Por eso en local `caratcore version` dice `dev`.
+
+`SHA256SUMS` permite al usuario comprobar con `sha256sum -c` que el archivo
+descargado es exactamente el publicado.
+
+## 7. Qué falta y hacia dónde va
 
 - **Ejecutar el plan**: un paquete ejecutor que pida confirmación, use `sudo`
   si hace falta y pare si un paso falla.
@@ -178,7 +201,7 @@ Debian limpia, nunca en Franc.
 - Pendientes de seguridad y diseño: ver la sección "Pendientes" de
   [decisions.md](decisions.md).
 
-## 7. Preguntas para estudiar
+## 8. Preguntas para estudiar
 
 1. ¿Por qué `InstallPlan` no llama a `Detect` por dentro?
 2. ¿Qué pasaría si `Command` fuera un `string` y lo ejecutáramos con `sh -c`?
@@ -188,3 +211,5 @@ Debian limpia, nunca en Franc.
 5. En `detect.go`, ¿por qué se acepta el código de salida 1 de `dpkg-query`
    pero no otros errores?
 6. ¿Por qué `plan.go` usa el paquete `path` y no `path/filepath`?
+7. ¿Por qué la release se crea como borrador y no publicada directamente?
+8. ¿Qué cambia en el binario si se compila con `CGO_ENABLED=1`?

@@ -1,0 +1,43 @@
+# Builds the Linux binary when a version tag (v0.1.0, ...) is pushed and
+# creates a DRAFT GitHub release with it and its SHA-256 checksum. A person
+# reviews the draft and publishes it by hand.
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write # needed to create the release
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - run: go vet ./...
+      - run: go test ./...
+
+      - name: Build
+        env:
+          CGO_ENABLED: "0" # fully static binary: no system libraries needed
+          GOOS: linux
+          GOARCH: amd64
+        run: |
+          mkdir dist
+          go build -trimpath -ldflags "-s -w -X main.version=${GITHUB_REF_NAME}" \
+            -o dist/caratcore-linux-amd64 ./cmd/caratcore
+
+      - name: Checksums
+        working-directory: dist
+        run: sha256sum caratcore-linux-amd64 > SHA256SUMS
+
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --draft --title "$GITHUB_REF_NAME" --generate-notes

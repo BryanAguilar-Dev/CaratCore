@@ -10,6 +10,10 @@ import (
 	"github.com/BryanAguilar-Dev/CaratCore/internal/doctor"
 )
 
+// version is set at build time by the release workflow with
+// -ldflags "-X main.version=v0.1.0". Local builds report "dev".
+var version = "dev"
+
 func main() {
 	os.Exit(run(os.Args[1:]))
 }
@@ -33,6 +37,9 @@ func run(args []string) int {
 		return 0
 	case "install":
 		return runInstall(args[1:])
+	case "version", "--version":
+		fmt.Println("caratcore", version)
+		return 0
 	default:
 		fmt.Fprintf(os.Stderr, "unknown command %q\n\n", args[0])
 		printUsage(os.Stderr)
@@ -47,5 +54,6 @@ func printUsage(w *os.File) {
 	fmt.Fprintln(w, "  doctor   check whether this machine can run CaratCore services (read-only)")
 	fmt.Fprintln(w, "  install docker --dry-run [--json]")
 	fmt.Fprintln(w, "           show the plan to install Docker and Docker Compose")
+	fmt.Fprintln(w, "  version  show the CaratCore version")
 	fmt.Fprintln(w, "  help     show this help")
 }
