@@ -8,7 +8,7 @@ import (
 func checkDocker(ctx context.Context, env Env) []Check {
 	if _, err := env.LookPath("docker"); err != nil {
 		return []Check{
-			newCheck("Docker CLI", StatusInfo, "not installed (installing it is a later CaratCore phase)"),
+			newCheck("Docker CLI", StatusInfo, "not installed (install it with: caratcore install docker)"),
 			newCheck("Docker Engine", StatusInfo, "not checked: needs the Docker CLI"),
 			newCheck("Docker Compose", StatusInfo, "not checked: needs the Docker CLI"),
 		}
@@ -35,7 +35,9 @@ func checkDockerEngine(ctx context.Context, env Env) Check {
 	out, err := env.Run(ctx, "docker", "version", "--format", "{{.Server.Version}}")
 	if err != nil {
 		if strings.Contains(strings.ToLower(out), "permission denied") {
-			return newCheck("Docker Engine", StatusWarn, "permission denied: this user cannot use Docker (is it in the docker group?)")
+			// Expected: CaratCore uses Docker through sudo and does not add
+			// users to the docker group, which would give them root (D17).
+			return newCheck("Docker Engine", StatusInfo, "not checked: this user cannot use Docker without sudo (CaratCore uses Docker with sudo)")
 		}
 		return newCheck("Docker Engine", StatusWarn, "the Engine does not respond (is the docker service running?)")
 	}
@@ -45,7 +47,7 @@ func checkDockerEngine(ctx context.Context, env Env) Check {
 func checkDockerCompose(ctx context.Context, env Env) Check {
 	out, err := env.Run(ctx, "docker", "compose", "version", "--short")
 	if err != nil {
-		return newCheck("Docker Compose", StatusInfo, "plugin not found (installing it is a later CaratCore phase)")
+		return newCheck("Docker Compose", StatusInfo, "plugin not found")
 	}
 	return newCheck("Docker Compose", StatusOK, "available (version %s)", strings.TrimSpace(out))
 }

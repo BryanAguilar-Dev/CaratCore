@@ -12,7 +12,7 @@ con el motivo de cada paso y, solo si lo apruebas, lo ejecuta.
 
 ```
 system check -> system model -> recommendation -> installation plan -> deployment
-   (doctor)      (Host, ...)                          (plan.Plan)        (pendiente)
+   (doctor)      (Host, ...)                          (plan.Plan)         (runner)
 ```
 
 ## 2. Mapa del repositorio
@@ -20,12 +20,13 @@ system check -> system model -> recommendation -> installation plan -> deploymen
 ```
 cmd/caratcore/        el programa (la CLI). Solo lee argumentos y llama al núcleo
   main.go             elige el comando: doctor, install, help
-  install.go          `install docker --dry-run [--json]`
+  install.go          `install docker [--dry-run [--json]]`: plan, confirmación, ejecución
 internal/             el núcleo. "internal" = otros proyectos no pueden importarlo
   doctor/             diagnóstico de solo lectura
   osrelease/          lee /etc/os-release (qué distribución y versión es)
   plan/               el plan de instalación como dato
   docker/             detecta Docker y genera el plan para instalarlo
+  runner/             ejecuta un plan paso a paso (con sudo si hace falta)
 docs/                 decisiones y esta guía
 go.mod                nombre del módulo y versión de Go; sin dependencias externas
 .gitattributes        fuerza finales de línea LF (estilo Linux)
@@ -157,6 +158,45 @@ Si Docker y Compose ya están, el plan sale vacío ("Nothing to do").
 Por qué no `curl get.docker.com | sh`: ejecuta un script remoto sin que veas
 cada paso. Es justo lo contrario de lo que quiere CaratCore.
 
+### runner (ejecutar el plan)
+`runner.New().Run(ctx, plan)` ejecuta los pasos en orden. Lo que hace:
+- **Valida el plan otra vez** antes de nada. Es barato y evita ejecutar un
+  plan roto aunque alguien se olvide de validarlo antes.
+- **sudo solo donde hace falta.** Si CaratCore no es root (`os.Geteuid() != 0`),
+  los pasos con `Root: true` se ejecutan como `sudo -- comando...`. El `--`
+  le dice a sudo "lo que sigue ya no son opciones tuyas".
+- **`sudo -v` primero.** Pide la contraseña una vez antes del primer paso. Si
+  el usuario no puede usar sudo, se entera sin que se haya tocado nada.
+- **Archivos sin shell.** Para un paso `File` escribe el contenido en un
+  temporal (`os.CreateTemp`, permisos 0600) y lo copia con
+  `install -m 0644 -- temporal destino`. `defer os.Remove(tmp)` borra el
+  temporal al salir de la función, pase lo que pase.
+- **Para en el primer fallo** y devuelve un `*StepError` con el número del
+  paso. La CLI lo reconoce con `errors.As` y explica qué se hizo y qué no.
+  No hay rollback: los pasos de Docker se pueden repetir, así que basta con
+  volver a lanzar el comando.
+- **Ctrl+C con cuidado.** Pulsar Ctrl+C manda SIGINT a todo el grupo de
+  procesos de la terminal: a CaratCore y al `apt` que esté corriendo. `apt`
+  sabe pararse limpio con SIGINT. CaratCore usa `signal.NotifyContext` para no
+  morir: el contexto se cancela y el bucle no empieza el siguiente paso. Por
+  eso el comando se lanza con `exec.Command` y **no** con
+  `exec.CommandContext`, que lo mataría con SIGKILL (y matar `dpkg` a mitad
+  puede romper la base de datos de paquetes).
+
+Cómo se prueba sin ejecutar nada: `Runner` tiene un campo privado
+`exec func(args []string) error`. `New()` pone la función real; los tests
+ponen una que solo apunta los comandos y puede fingir fallos. Es la misma
+idea que `Env` en `doctor`, a escala de una sola función.
+
+Confirmar es cosa de la CLI (`confirm` en `install.go`), no de `runner`: el
+núcleo no sabe si hay una persona delante. Recibe `io.Reader`/`io.Writer`, así
+que también se podría probar con un `strings.Reader`.
+
+**Por qué nunca el grupo `docker`.** Quien puede hablar con el demonio de
+Docker puede arrancar un contenedor con `/` montado y ser root. Meter al
+usuario en el grupo es darle root sin contraseña. CaratCore usa
+`sudo docker ...` y `doctor` lo trata como normal (INFO).
+
 ## 5. Cómo se prueba
 
 ```
@@ -194,8 +234,8 @@ descargado es exactamente el publicado.
 
 ## 7. Qué falta y hacia dónde va
 
-- **Ejecutar el plan**: un paquete ejecutor que pida confirmación, use `sudo`
-  si hace falta y pare si un paso falla.
+- **Probar el instalador en la VM Debian limpia** (nunca en Franc): instalación
+  real, un fallo a mitad y Ctrl+C durante `apt`.
 - **Servicios**: AdGuard Home y Uptime Kuma con Docker Compose, con su
   catálogo en JSON incrustado (`go:embed`).
 - Pendientes de seguridad y diseño: ver la sección "Pendientes" de
@@ -213,3 +253,6 @@ descargado es exactamente el publicado.
 6. ¿Por qué `plan.go` usa el paquete `path` y no `path/filepath`?
 7. ¿Por qué la release se crea como borrador y no publicada directamente?
 8. ¿Qué cambia en el binario si se compila con `CGO_ENABLED=1`?
+9. ¿Por qué `runner` usa `exec.Command` y no `exec.CommandContext`?
+10. ¿Qué pasaría si `confirm` aceptara una respuesta vacía como "sí"?
+11. ¿Por qué el temporal de un paso `File` se crea con permisos 0600?

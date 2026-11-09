@@ -3,9 +3,10 @@
 CaratCore is an open source tool that helps you understand and build your own
 private infrastructure (a homelab) without hiding what happens on your machine.
 
-> **Status: early development.** `doctor` works, and `install docker` can show
-> its plan with `--dry-run` but cannot execute it yet. Everything else described
-> in [docs/decisions.md](docs/decisions.md) is planned, not implemented.
+> **Status: early development.** `doctor` works and `install docker` can
+> install Docker, but the installer has not been tested on a real Debian
+> machine yet. Everything else described in
+> [docs/decisions.md](docs/decisions.md) is planned, not implemented.
 
 ## The idea
 
@@ -54,6 +55,14 @@ are already installed, the plan is empty. CaratCore refuses to plan (and
 explains why) on unsupported platforms, when packages that conflict with
 Docker's are installed, or when Docker is installed without Compose: it never
 removes or changes an existing installation.
+
+`caratcore install docker` (without `--dry-run`) shows the same plan and asks
+you to type `yes` before running it. Steps that need root run through `sudo`
+(sudo asks for your password; CaratCore never sees it). Each command is printed
+before it runs. If a step fails, CaratCore stops, tells you which steps were
+done and which were not, and undoes nothing; fix the problem and run the
+command again. CaratCore never adds your user to the `docker` group, because
+that is equivalent to giving it root: use `sudo docker ...`.
 
 ## Install
 

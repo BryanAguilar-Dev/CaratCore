@@ -55,7 +55,7 @@ explícitamente) o **Pendiente**.
   - Si Docker y Compose ya están, el plan sale vacío.
   - `Detect` (lee el sistema) está separado de `InstallPlan` (función pura),
     para poder probar el plan sin un Debian real.
-  - Por ahora solo `--dry-run`: ejecutar el plan llegará en un paso posterior.
+  - Al principio solo `--dry-run`; la ejecución llegó con D18.
 - **D13. `internal/osrelease`** (2026-11-09): la lectura de `/etc/os-release`
   sale de `doctor` a su propio paquete porque ahora la usan `doctor` y
   `docker`.
@@ -75,6 +75,31 @@ explícitamente) o **Pendiente**.
     `--dry-run`) y en la VM Debian limpia.
 - **D16. CI** (2026-11-09): `ci.yml` pasa `gofmt`, `go vet` y `go test` en cada
   push a `main` y en cada pull request.
+- **D17. Docker siempre con sudo, nunca con el grupo `docker`** (2026-11-09).
+  Estar en el grupo `docker` equivale a ser root sin contraseña ni registro.
+  CaratCore no añade usuarios al grupo y usará `sudo docker ...`. `doctor`
+  informa (INFO, no WARN) cuando el usuario no puede usar Docker sin sudo.
+- **D18. Ejecutor del plan** (2026-11-09), paquete `internal/runner`:
+  - La CLI muestra el plan y pide escribir `yes` (o `y`); cualquier otra
+    respuesta cancela. Pedir confirmación es cosa de la CLI, no del núcleo.
+    `--json` solo con `--dry-run`.
+  - Si CaratCore no es root, los pasos `Root` se ejecutan con `sudo --`. Antes
+    del primer paso se ejecuta `sudo -v`: si el usuario no puede usar sudo,
+    falla sin haber tocado nada. La contraseña la pide sudo; CaratCore nunca
+    la ve ni la guarda.
+  - Los pasos `File` escriben el contenido en un temporal (permisos 0600) y lo
+    copian con `install -m MODO -- temporal destino` (con sudo si hace falta):
+    sin shell y con el comando real visible.
+  - Cada comando se muestra (`$ ...`) antes de ejecutarse y su salida va
+    directa a la terminal.
+  - Para en el primer fallo y no deshace nada; informa qué pasos se
+    completaron y cuáles no se ejecutaron. Los pasos de Docker se pueden
+    repetir sin riesgo, así que basta con volver a lanzar el comando: se
+    planifica de nuevo desde el estado actual. El rollback sigue pendiente.
+  - Ctrl+C no mata al comando en curso (matar `apt`/`dpkg` con SIGKILL puede
+    dejar el sistema a medias): el hijo recibe SIGINT del terminal, CaratCore
+    sobrevive, no lanza más pasos e informa dónde se paró.
+  - Sin opción `--yes` por ahora: no hace falta hasta que haya automatización.
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
@@ -91,17 +116,15 @@ explícitamente) o **Pendiente**.
 - Estado persistente (archivo o SQLite), rollback y actualizaciones.
 - AdGuard Home como DNS de Tailscale: riesgo de perder internet si el servidor
   se apaga; necesita DNS de respaldo.
-- Comprobar si el usuario puede usar sudo (hoy solo se detecta que existe).
+- `doctor` solo detecta que sudo existe; el ejecutor ya lo comprueba con
+  `sudo -v` antes de ejecutar (D18).
 - Umbrales de RAM y disco de `doctor`: son estimaciones, hay que medirlas con
   los servicios reales.
 - Probar los casos de fallo de `doctor` en una máquina real.
-- Ejecutar el plan: paquete ejecutor, confirmación del usuario, uso de `sudo`
-  cuando no se es root, y qué hacer si un paso falla a mitad.
 - Verificar la huella de la clave GPG de Docker además de descargarla por
   HTTPS (la guía oficial solo la descarga).
-- Grupo `docker`: añadir al usuario equivale a darle root. Por ahora no se
-  hace; decidir si CaratCore usará Docker siempre con root/sudo.
-- Probar `install docker --dry-run` y la detección de conflictos en la VM.
+- Probar en la VM Debian limpia: `install docker --dry-run`, la detección de
+  conflictos, la instalación real, un fallo a mitad y Ctrl+C durante `apt`.
 
 ## Ideas fuera de la v1
 Interfaz web, otras distribuciones, GPU y recomendador avanzado, backups,

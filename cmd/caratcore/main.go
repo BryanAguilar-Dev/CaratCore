@@ -52,8 +52,9 @@ func printUsage(w *os.File) {
 	fmt.Fprintln(w, "")
 	fmt.Fprintln(w, "Commands:")
 	fmt.Fprintln(w, "  doctor   check whether this machine can run CaratCore services (read-only)")
-	fmt.Fprintln(w, "  install docker --dry-run [--json]")
-	fmt.Fprintln(w, "           show the plan to install Docker and Docker Compose")
+	fmt.Fprintln(w, "  install docker [--dry-run [--json]]")
+	fmt.Fprintln(w, "           install Docker and Docker Compose after showing the plan and")
+	fmt.Fprintln(w, "           asking for approval; --dry-run only shows the plan")
 	fmt.Fprintln(w, "  version  show the CaratCore version")
 	fmt.Fprintln(w, "  help     show this help")
 }
