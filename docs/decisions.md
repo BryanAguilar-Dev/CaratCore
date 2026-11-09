@@ -123,8 +123,8 @@ explícitamente) o **Pendiente**.
 - Probar los casos de fallo de `doctor` en una máquina real.
 - Verificar la huella de la clave GPG de Docker además de descargarla por
   HTTPS (la guía oficial solo la descarga).
-- Probar en Franc el despliegue real de AdGuard Home y Uptime Kuma, y
-  confirmar que las etiquetas de imagen existen en Docker Hub.
+- Hecho (2026-11-09): AdGuard Home y Uptime Kuma desplegados en Franc con
+  `install <servicio>`; las etiquetas de imagen existen y funcionan.
 - `doctor` marca WARN los puertos ocupados aunque los ocupe un servicio que
   desplegó CaratCore; debería reconocerlo.
 - Actualizar servicios (cambiar la versión de la imagen) y desinstalarlos.

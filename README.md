@@ -5,8 +5,8 @@ private infrastructure (a homelab) without hiding what happens on your machine.
 
 > **Status: early development.** `doctor` works and `install docker` installs
 > Docker (tested once on a real Debian 13 machine; failure cases not tested
-> yet). Deploying AdGuard Home and Uptime Kuma is implemented but not yet
-> tested on a real machine. Everything else described in
+> yet). Deploying AdGuard Home and Uptime Kuma works (tested on the same
+> machine). Everything else described in
 > [docs/decisions.md](docs/decisions.md) is planned, not implemented.
 
 ## The idea
@@ -72,7 +72,7 @@ approval as Docker. Each service lives in `/opt/caratcore/<service>/`: its
 CaratCore refuses to deploy when Docker is missing, when a port is used by
 another program, or when you edited the `compose.yaml` it wrote. After
 installing, it tells you what to do next (for example, AdGuard Home's setup
-wizard on port 3000). Not tested on a real machine yet.
+wizard on port 3000).
 
 | Service | What it does | Ports |
 |---|---|---|
