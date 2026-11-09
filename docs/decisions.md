@@ -25,8 +25,10 @@ explícitamente) o **Pendiente**.
   permisos) y no encaja con un servidor siempre encendido que usa el puerto 53.
   Para no cerrar la puerta: el plan es un dato neutro, cada plataforma tiene su
   generador de pasos, y el código dependiente del sistema va en archivos por
-  plataforma (`_linux.go` / `_other.go`). En Windows se compila, se pasan los
-  tests y se ve el plan con `--dry-run`; la ejecución real solo en Debian.
+  plataforma (`_linux.go` / `_other.go`). En Windows se compila y se pasan los
+  tests (que generan y validan el plan de un Debian simulado); en Windows
+  `install --dry-run` responde "plataforma no soportada". La ejecución real,
+  solo en Debian.
 - **D11. Forma del plan** (2026-11-09), paquete `internal/plan`:
   - Un paso tiene `ID`, `Title`, `Reason`, `Command` y `Root`. `Validate`
     rechaza pasos sin motivo: nada se aprueba sin explicación.
@@ -37,6 +39,28 @@ explícitamente) o **Pendiente**.
   - Un plan vacío es válido: significa "no hay nada que hacer".
   - Construir o mostrar un plan nunca ejecuta nada; ejecutar será otro paquete.
   - Se serializa a JSON (librería estándar) para poder guardarlo o revisarlo.
+  - Un paso hace una sola cosa: ejecutar `Command` o escribir `File` (ruta
+    absoluta, contenido y permisos). Escribir archivos así evita
+    `sh -c "echo ... > archivo"`.
+- **D12. Instalación de Docker** (2026-11-09), paquete `internal/docker`:
+  - Sigue la guía oficial de Docker para Debian: repositorio de Docker
+    (formato deb822) y paquetes `docker-ce`, `docker-ce-cli`, `containerd.io`,
+    `docker-buildx-plugin` y `docker-compose-plugin`. No se usa `docker.io` de
+    Debian porque no trae el plugin de Compose que documenta Docker.
+  - Tampoco se usa el script `get.docker.com`: ejecuta código remoto sin que
+    el usuario vea cada paso, lo contrario de la idea de CaratCore.
+  - CaratCore no borra ni modifica nada existente. Se detiene con un mensaje
+    claro si: la plataforma no es Debian 13 amd64; hay paquetes en conflicto
+    (`docker.io`, `containerd`, `runc`...); o Docker está instalado sin Compose.
+  - Si Docker y Compose ya están, el plan sale vacío.
+  - `Detect` (lee el sistema) está separado de `InstallPlan` (función pura),
+    para poder probar el plan sin un Debian real.
+  - Por ahora solo `--dry-run`: ejecutar el plan llegará en un paso posterior.
+- **D13. `internal/osrelease`** (2026-11-09): la lectura de `/etc/os-release`
+  sale de `doctor` a su propio paquete porque ahora la usan `doctor` y
+  `docker`.
+- **D14. Finales de línea LF** (2026-11-09): `.gitattributes` fuerza LF
+  también en Windows, porque CaratCore genera archivos para Linux.
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
@@ -57,6 +81,13 @@ explícitamente) o **Pendiente**.
 - Umbrales de RAM y disco de `doctor`: son estimaciones, hay que medirlas con
   los servicios reales.
 - Probar los casos de fallo de `doctor` en una máquina real.
+- Ejecutar el plan: paquete ejecutor, confirmación del usuario, uso de `sudo`
+  cuando no se es root, y qué hacer si un paso falla a mitad.
+- Verificar la huella de la clave GPG de Docker además de descargarla por
+  HTTPS (la guía oficial solo la descarga).
+- Grupo `docker`: añadir al usuario equivale a darle root. Por ahora no se
+  hace; decidir si CaratCore usará Docker siempre con root/sudo.
+- Probar `install docker --dry-run` y la detección de conflictos en la VM.
 
 ## Ideas fuera de la v1
 Interfaz web, otras distribuciones, GPU y recomendador avanzado, backups,

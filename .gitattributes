@@ -1,0 +1,3 @@
+# Use LF line endings everywhere, also on Windows checkouts. CaratCore
+# targets Linux and generates files for it.
+* text=auto eol=lf

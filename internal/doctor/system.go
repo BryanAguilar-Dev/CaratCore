@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"strconv"
 	"strings"
+
+	"github.com/BryanAguilar-Dev/CaratCore/internal/osrelease"
 )
 
 const (
@@ -24,11 +26,11 @@ func checkPlatform(env Env) Check {
 	if env.GOOS != "linux" {
 		return newCheck(name, StatusFail, "%s/%s is not supported: CaratCore targets Linux", env.GOOS, env.GOARCH)
 	}
-	data, err := env.ReadFile("/etc/os-release")
+	data, err := env.ReadFile(osrelease.Path)
 	if err != nil {
 		return newCheck(name, StatusWarn, "Linux detected, but /etc/os-release could not be read")
 	}
-	release := parseOSRelease(string(data))
+	release := osrelease.Parse(string(data))
 	pretty := release["PRETTY_NAME"]
 	if pretty == "" {
 		pretty = "Linux"
@@ -78,19 +80,6 @@ func checkDisk(env Env) Check {
 		status = StatusWarn
 	}
 	return newCheck("Disk", status, "%s free of %s on /", formatBytes(free), formatBytes(total))
-}
-
-// parseOSRelease reads the KEY=value lines of /etc/os-release.
-func parseOSRelease(data string) map[string]string {
-	values := map[string]string{}
-	for _, line := range strings.Split(data, "\n") {
-		key, value, found := strings.Cut(strings.TrimSpace(line), "=")
-		if !found || strings.HasPrefix(key, "#") {
-			continue
-		}
-		values[key] = strings.Trim(value, `"'`)
-	}
-	return values
 }
 
 // parseMeminfo returns MemTotal and MemAvailable of /proc/meminfo in bytes.

@@ -3,9 +3,9 @@
 CaratCore is an open source tool that helps you understand and build your own
 private infrastructure (a homelab) without hiding what happens on your machine.
 
-> **Status: early development.** Only the read-only `doctor` command exists.
-> Everything else described in [docs/decisions.md](docs/decisions.md) is planned,
-> not implemented.
+> **Status: early development.** `doctor` works, and `install docker` can show
+> its plan with `--dry-run` but cannot execute it yet. Everything else described
+> in [docs/decisions.md](docs/decisions.md) is planned, not implemented.
 
 ## The idea
 
@@ -45,6 +45,15 @@ Verdict: ready
 ```
 
 The command exits with code 1 if any check is FAIL.
+
+`caratcore install docker --dry-run` shows, step by step and with the reason
+for each one, how CaratCore would install Docker Engine and Docker Compose
+following [Docker's official guide for Debian](https://docs.docker.com/engine/install/debian/).
+Nothing is executed. Add `--json` to get the plan as JSON. If Docker and Compose
+are already installed, the plan is empty. CaratCore refuses to plan (and
+explains why) on unsupported platforms, when packages that conflict with
+Docker's are installed, or when Docker is installed without Compose: it never
+removes or changes an existing installation.
 
 ## Build and test
 

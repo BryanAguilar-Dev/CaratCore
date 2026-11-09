@@ -20,13 +20,6 @@ func fakeEnv(files map[string]string) Env {
 	}
 }
 
-func TestParseOSRelease(t *testing.T) {
-	got := parseOSRelease("PRETTY_NAME=\"Debian GNU/Linux 13 (trixie)\"\nVERSION_ID=\"13\"\nID=debian\n# comment\n")
-	if got["ID"] != "debian" || got["VERSION_ID"] != "13" || got["PRETTY_NAME"] != "Debian GNU/Linux 13 (trixie)" {
-		t.Fatalf("unexpected result: %v", got)
-	}
-}
-
 func TestParseMeminfo(t *testing.T) {
 	total, available, err := parseMeminfo("MemTotal:        5880000 kB\nMemFree:  100 kB\nMemAvailable:    5000000 kB\n")
 	if err != nil {
@@ -78,10 +71,10 @@ func TestParseTailscaleState(t *testing.T) {
 
 func TestCheckPlatform(t *testing.T) {
 	tests := []struct {
-		name   string
-		goos   string
-		osrel  string
-		want   Status
+		name  string
+		goos  string
+		osrel string
+		want  Status
 	}{
 		{"debian 13", "linux", "ID=debian\nVERSION_ID=\"13\"\n", StatusOK},
 		{"debian 12", "linux", "ID=debian\nVERSION_ID=\"12\"\n", StatusWarn},

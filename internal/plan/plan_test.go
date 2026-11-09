@@ -18,11 +18,28 @@ func validStep(id string) Step {
 	}
 }
 
+func validFileStep(id string) Step {
+	return Step{
+		ID:     id,
+		Title:  "Add repository",
+		Reason: "apt must know where to download from",
+		File:   &File{Path: "/etc/apt/sources.list.d/x.sources", Content: "Types: deb\nSuites: trixie\n", Mode: 0o644},
+		Root:   true,
+	}
+}
+
 func TestValidate(t *testing.T) {
 	noReason := validStep("b")
 	noReason.Reason = ""
 	noCommand := validStep("b")
 	noCommand.Command = nil
+	fileStep := validFileStep("f")
+	both := validFileStep("f")
+	both.Command = []string{"true"}
+	relative := validFileStep("f")
+	relative.File.Path = "etc/x"
+	noMode := validFileStep("f")
+	noMode.File.Mode = 0
 
 	tests := []struct {
 		name    string
@@ -35,7 +52,11 @@ func TestValidate(t *testing.T) {
 		{"missing id", Plan{Title: "t", Steps: []Step{validStep("")}}, "missing id"},
 		{"duplicate id", Plan{Title: "t", Steps: []Step{validStep("a"), validStep("a")}}, "duplicate id"},
 		{"missing reason", Plan{Title: "t", Steps: []Step{validStep("a"), noReason}}, "step 2 (b): missing reason"},
-		{"missing command", Plan{Title: "t", Steps: []Step{noCommand}}, "missing command"},
+		{"no command nor file", Plan{Title: "t", Steps: []Step{noCommand}}, "either a command or a file"},
+		{"file step", Plan{Title: "t", Steps: []Step{fileStep}}, ""},
+		{"command and file", Plan{Title: "t", Steps: []Step{both}}, "either a command or a file"},
+		{"relative file path", Plan{Title: "t", Steps: []Step{relative}}, "not absolute"},
+		{"file without mode", Plan{Title: "t", Steps: []Step{noMode}}, "mode is not set"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -63,7 +84,7 @@ func TestShellJoin(t *testing.T) {
 
 func TestRender(t *testing.T) {
 	var buf bytes.Buffer
-	Render(&buf, Plan{Title: "Install Docker", Steps: []Step{validStep("a")}})
+	Render(&buf, Plan{Title: "Install Docker", Steps: []Step{validStep("a"), validFileStep("f")}})
 	out := buf.String()
 	for _, want := range []string{
 		"Plan: Install Docker",
@@ -71,6 +92,9 @@ func TestRender(t *testing.T) {
 		"1. Refresh package lists",
 		"Why: apt needs the latest package index",
 		"Run as root: apt-get update",
+		"2. Add repository",
+		"Write file as root: /etc/apt/sources.list.d/x.sources (mode 0644)",
+		"     | Types: deb\n     | Suites: trixie\n",
 	} {
 		if !strings.Contains(out, want) {
 			t.Errorf("output is missing %q:\n%s", want, out)
@@ -85,7 +109,7 @@ func TestRender(t *testing.T) {
 }
 
 func TestJSONRoundTrip(t *testing.T) {
-	in := Plan{Title: "Install Docker", Steps: []Step{validStep("a")}}
+	in := Plan{Title: "Install Docker", Steps: []Step{validStep("a"), validFileStep("f")}}
 	data, err := json.Marshal(in)
 	if err != nil {
 		t.Fatal(err)

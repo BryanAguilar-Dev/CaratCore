@@ -18,11 +18,18 @@ func Render(w io.Writer, p Plan) {
 	for i, s := range p.Steps {
 		fmt.Fprintf(w, "\n%d. %s\n", i+1, s.Title)
 		fmt.Fprintf(w, "   Why: %s\n", s.Reason)
-		run := "Run"
+		asRoot := ""
 		if s.Root {
-			run = "Run as root"
+			asRoot = " as root"
 		}
-		fmt.Fprintf(w, "   %s: %s\n", run, ShellJoin(s.Command))
+		if s.File != nil {
+			fmt.Fprintf(w, "   Write file%s: %s (mode %04o)\n", asRoot, s.File.Path, uint32(s.File.Mode))
+			for _, line := range strings.Split(strings.TrimRight(s.File.Content, "\n"), "\n") {
+				fmt.Fprintf(w, "     | %s\n", line)
+			}
+			continue
+		}
+		fmt.Fprintf(w, "   Run%s: %s\n", asRoot, ShellJoin(s.Command))
 	}
 }
 
