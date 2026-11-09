@@ -3,9 +3,9 @@
 CaratCore is an open source tool that helps you understand and build your own
 private infrastructure (a homelab) without hiding what happens on your machine.
 
-> **Status: early development.** `doctor` works and `install docker` can
-> install Docker, but the installer has not been tested on a real Debian
-> machine yet. Everything else described in
+> **Status: early development.** `doctor` works and `install docker` installs
+> Docker (tested once on a real Debian 13 machine; failure cases not tested
+> yet). Everything else described in
 > [docs/decisions.md](docs/decisions.md) is planned, not implemented.
 
 ## The idea
