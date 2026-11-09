@@ -10,8 +10,8 @@ complejidad: el usuario debe entender qué se hace y por qué.
 
 ## Alcance actual: v1 Lite
 1. `doctor` (hecho): diagnóstico de solo lectura.
-2. Instalar Docker y Docker Compose.
-3. Plan de instalación como dato (con motivo por paso y `--dry-run`).
+2. Plan de instalación como dato (con motivo por paso y `--dry-run`).
+3. Instalar Docker y Docker Compose como pasos del plan (ver D9).
 4. Servicios: AdGuard Home y Uptime Kuma (Tailscale solo se detecta).
 
 Todo lo que no esté aquí se apunta en `docs/decisions.md` como idea y no se
