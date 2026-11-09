@@ -52,7 +52,9 @@ The command exits with code 1 if any check is FAIL.
 `caratcore install docker --dry-run` shows, step by step and with the reason
 for each one, how CaratCore would install Docker Engine and Docker Compose
 following [Docker's official guide for Debian](https://docs.docker.com/engine/install/debian/).
-Nothing is executed. Add `--json` to get the plan as JSON. If Docker and Compose
+Nothing is executed. Add `--json` to get the plan as JSON. Unlike the guide,
+CaratCore does not download Docker's signing key: the key is built into the
+binary and a test checks its fingerprint against the one Docker publishes. If Docker and Compose
 are already installed, the plan is empty. CaratCore refuses to plan (and
 explains why) on unsupported platforms, when packages that conflict with
 Docker's are installed, or when Docker is installed without Compose: it never

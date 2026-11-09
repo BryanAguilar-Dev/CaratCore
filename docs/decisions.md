@@ -163,6 +163,18 @@ explícitamente) o **Pendiente**.
   la red local es la deseada. El README advierte de no abrir los puertos en el
   router ni desplegar en una máquina con IP pública (resolvedor DNS abierto)
   sin filtrar con `DOCKER-USER`.
+- **D26. Clave GPG de Docker incrustada en el binario** (2026-11-09). En
+  lugar de descargarla con curl en cada instalación (como la guía oficial),
+  `internal/docker/docker.asc` va con `go:embed` y se escribe con un paso
+  `File` (0644). Un test calcula su huella OpenPGP v4 con la librería
+  estándar y la compara con la de la guía de Docker
+  (`9DC8 5822 9FC7 DD38 854A E2D8 8D81 803C 0EBF CD88`, comprobada también
+  con `gpg --show-keys`). Ventajas: la clave se revisa en el código, no
+  depende de la red en el momento de instalar y sobra curl como
+  prerrequisito. Coste aceptado: si Docker rota la clave, hace falta una
+  versión nueva de CaratCore (como con las imágenes fijas de D23). El plan
+  muestra la clave entera; el motivo del paso incluye la huella y el comando
+  para comprobarla.
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
@@ -178,8 +190,6 @@ explícitamente) o **Pendiente**.
 - Umbrales de RAM y disco de `doctor`: son estimaciones, hay que medirlas con
   los servicios reales.
 - Probar los casos de fallo de `doctor` en una máquina real.
-- Verificar la huella de la clave GPG de Docker además de descargarla por
-  HTTPS (la guía oficial solo la descarga).
 - Hecho (2026-11-09): AdGuard Home y Uptime Kuma desplegados en Franc con
   `install <servicio>`; las etiquetas de imagen existen y funcionan.
 - Actualizar servicios (cambiar la versión de la imagen) y desinstalarlos.

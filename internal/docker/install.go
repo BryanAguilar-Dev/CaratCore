@@ -4,6 +4,7 @@
 package docker
 
 import (
+	_ "embed"
 	"errors"
 	"fmt"
 	"strings"
@@ -11,8 +12,18 @@ import (
 	"github.com/BryanAguilar-Dev/CaratCore/internal/plan"
 )
 
+// dockerKey is Docker's apt signing key, downloaded from
+// https://download.docker.com/linux/debian/gpg and checked against
+// keyFingerprint, the fingerprint in Docker's guide. It ships inside the binary
+// instead of being downloaded at install time, so the key can be reviewed in
+// the source and a test proves its fingerprint (D26).
+//
+//go:embed docker.asc
+var dockerKey string
+
+const keyFingerprint = "9DC8 5822 9FC7 DD38 854A  E2D8 8D81 803C 0EBF CD88"
+
 const (
-	keyURL      = "https://download.docker.com/linux/debian/gpg"
 	repoURL     = "https://download.docker.com/linux/debian"
 	keyringDir  = "/etc/apt/keyrings"
 	keyPath     = keyringDir + "/docker.asc"
@@ -77,9 +88,9 @@ func InstallPlan(h Host) (plan.Plan, error) {
 		},
 		{
 			ID:      "install-prerequisites",
-			Title:   "Install ca-certificates and curl",
-			Reason:  "curl downloads Docker's signing key; ca-certificates lets it verify the HTTPS connection",
-			Command: []string{"apt-get", "install", "-y", "ca-certificates", "curl"},
+			Title:   "Install ca-certificates",
+			Reason:  "apt needs it to verify the HTTPS connection to Docker's repository",
+			Command: []string{"apt-get", "install", "-y", "ca-certificates"},
 			Root:    true,
 		},
 		{
@@ -90,18 +101,17 @@ func InstallPlan(h Host) (plan.Plan, error) {
 			Root:    true,
 		},
 		{
-			ID:      "download-docker-key",
-			Title:   "Download Docker's signing key",
-			Reason:  "apt uses this key to check that Docker's packages really come from Docker",
-			Command: []string{"curl", "-fsSL", keyURL, "-o", keyPath},
-			Root:    true,
-		},
-		{
-			ID:      "key-permissions",
-			Title:   "Make the key readable",
-			Reason:  "apt reads the key as an unprivileged user; this works even if root has a strict umask",
-			Command: []string{"chmod", "a+r", keyPath},
-			Root:    true,
+			ID:    "write-docker-key",
+			Title: "Write Docker's signing key",
+			Reason: "apt uses this key to check that Docker's packages really come from Docker. " +
+				"It is built into CaratCore, not downloaded; its fingerprint is " + keyFingerprint +
+				" (check it with: gpg --show-keys " + keyPath + ")",
+			File: &plan.File{
+				Path:    keyPath,
+				Content: dockerKey,
+				Mode:    0o644, // apt reads it as an unprivileged user
+			},
+			Root: true,
 		},
 		{
 			ID:     "add-docker-repository",

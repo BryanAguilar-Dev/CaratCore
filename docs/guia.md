@@ -146,14 +146,21 @@ Dos mitades separadas a propósito:
 
 `InstallPlan` sigue la guía oficial de Docker para Debian:
 1. `apt-get update`
-2. instalar `ca-certificates` y `curl`
+2. instalar `ca-certificates`
 3. crear `/etc/apt/keyrings`
-4. descargar la clave GPG de Docker
-5. hacerla legible
-6. escribir `/etc/apt/sources.list.d/docker.sources` (el repositorio)
-7. `apt-get update` otra vez
-8. instalar `docker-ce`, `docker-ce-cli`, `containerd.io`,
+4. escribir la clave GPG de Docker (0644, legible para apt)
+5. escribir `/etc/apt/sources.list.d/docker.sources` (el repositorio)
+6. `apt-get update` otra vez
+7. instalar `docker-ce`, `docker-ce-cli`, `containerd.io`,
    `docker-buildx-plugin` y `docker-compose-plugin`
+
+**La clave va dentro del binario** (`docker.asc` con `//go:embed`), en vez de
+descargarse con curl como hace la guía. La clave es lo que permite a apt
+confiar en los paquetes: si alguien la cambiara al descargarla, apt aceptaría
+paquetes falsos. Incrustada, se revisa en el código y `key_test.go` calcula su
+huella y la compara con la que publica Docker. La huella OpenPGP v4 es el
+SHA-1 de `0x99`, la longitud del paquete de clave pública y su contenido; se
+calcula con la librería estándar, sin `gpg` (D26).
 
 Y se niega (con un mensaje que explica qué hacer) cuando:
 - no es Debian 13 amd64;
@@ -319,3 +326,5 @@ descargado es exactamente el publicado.
     programa, y por qué se acepta?
 16. Si activas ufw con `deny incoming`, ¿por qué el puerto 3000 sigue
     respondiendo desde otro equipo de la red?
+17. Si Docker cambiara su clave GPG, ¿qué fallaría en una instalación con
+    CaratCore y qué habría que hacer?
