@@ -2,6 +2,7 @@ package doctor
 
 import (
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -109,6 +110,26 @@ func TestCheckPorts(t *testing.T) {
 	}
 	if got := checkPorts(fakeEnv(nil)).Status; got != StatusWarn {
 		t.Fatalf("no /proc/net: got %v", got)
+	}
+
+	// Port 53 busy, but AdGuard Home was deployed by CaratCore: expected.
+	mine := fakeEnv(map[string]string{
+		"/proc/net/udp": "  sl  local_address rem_address   st\n   0: 0100007F:0035 00000000:0000 07 00000000:00000000\n",
+		"/opt/caratcore/adguard-home/compose.yaml": "services: {}\n",
+	})
+	c := checkPorts(mine)
+	if c.Status != StatusOK || !strings.Contains(c.Detail, "AdGuard Home (53/udp)") {
+		t.Fatalf("deployed service: got %v %q", c.Status, c.Detail)
+	}
+
+	// Port 3001 busy and Uptime Kuma not deployed: still a WARN, even if
+	// another service was deployed.
+	mixed := fakeEnv(map[string]string{
+		"/proc/net/tcp": "  sl  local_address rem_address   st\n   0: 00000000:0BB9 00000000:0000 0A 00000000:00000000\n",
+		"/opt/caratcore/adguard-home/compose.yaml": "services: {}\n",
+	})
+	if c := checkPorts(mixed); c.Status != StatusWarn || !strings.Contains(c.Detail, "3001/tcp (Uptime Kuma)") {
+		t.Fatalf("other program: got %v %q", c.Status, c.Detail)
 	}
 }
 

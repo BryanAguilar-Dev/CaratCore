@@ -99,6 +99,11 @@ dependencias* y permite probar `doctor` en Windows sin un Debian real.
 Lee `/proc/meminfo` y `/proc/net/*` en lugar de la salida de `free` o `ss`
 porque esa salida cambia con el idioma del sistema y `ss -p` necesita root.
 
+Un puerto ocupado por un servicio que CaratCore ya desplegó (existe su
+`compose.yaml`) no es un problema: sale OK. `doctor` no puede comprobar que
+el puerto lo ocupe de verdad ese contenedor, porque eso exige `sudo docker` y
+`doctor` nunca usa sudo (D24).
+
 ### osrelease
 Una sola función: `Parse` convierte las líneas `CLAVE=valor` de
 `/etc/os-release` en un map. Antes vivía dentro de `doctor`; al necesitarla
@@ -277,11 +282,9 @@ descargado es exactamente el publicado.
 
 ## 7. Qué falta y hacia dónde va
 
-- **Probar el instalador en Franc**: instalación real, un fallo a mitad y
-  Ctrl+C durante `apt`.
-- **Probar los servicios en Franc**: AdGuard Home y Uptime Kuma.
-- **Gestionar servicios**: actualizar la versión, desinstalar, y que `doctor`
-  reconozca los puertos de servicios ya desplegados.
+- **Probar en Franc los casos de fallo**: conflictos, un fallo a mitad y
+  Ctrl+C durante `apt` (la instalación real y los servicios ya funcionan).
+- **Gestionar servicios**: actualizar la versión y desinstalar.
 - Pendientes de seguridad y diseño: ver la sección "Pendientes" de
   [decisions.md](decisions.md).
 
@@ -305,3 +308,5 @@ descargado es exactamente el publicado.
 13. Si relanzas `install adguard-home` con AdGuard ya en marcha, ¿por qué no
     falla por "puerto ocupado"?
 14. ¿Por qué `pull` y `up` son dos pasos y no uno?
+15. ¿En qué caso `doctor` daría OK a un puerto que en realidad ocupa otro
+    programa, y por qué se acepta?

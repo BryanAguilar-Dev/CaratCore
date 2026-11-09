@@ -10,11 +10,16 @@ import (
 
 	"github.com/BryanAguilar-Dev/CaratCore/internal/catalog"
 	"github.com/BryanAguilar-Dev/CaratCore/internal/ports"
+	"github.com/BryanAguilar-Dev/CaratCore/internal/service"
 )
 
 // checkPorts reports whether the ports of the catalog services are free. A
-// port in use may be a service CaratCore already deployed, so it is a WARN,
-// not a FAIL.
+// busy port of a service CaratCore deployed (its compose.yaml exists) is
+// expected, so it is OK. Any other busy port is a WARN, not a FAIL: it only
+// blocks deploying that service.
+//
+// doctor cannot confirm that the program on the port is that service's
+// container: asking Docker needs sudo (D17), and doctor never uses it.
 func checkPorts(env Env) Check {
 	services, err := catalog.All()
 	if err != nil {
@@ -26,23 +31,38 @@ func checkPorts(env Env) Check {
 	}
 
 	var numbers []string
-	var busy []string
+	var busy, deployed []string
 	seen := map[string]bool{}
 	for _, s := range services {
+		_, err := env.ReadFile(service.ComposePath(s))
+		isDeployed := err == nil
+		var mine []string
 		for _, p := range s.Ports {
 			if n := strconv.Itoa(p.Port); !seen[n] {
 				seen[n] = true
 				numbers = append(numbers, n)
 			}
-			if key := ports.Key(p.Port, p.Protocol); inUse[key] {
+			key := ports.Key(p.Port, p.Protocol)
+			switch {
+			case !inUse[key]:
+			case isDeployed:
+				mine = append(mine, key)
+			default:
 				busy = append(busy, fmt.Sprintf("%s (%s)", key, s.Name))
 			}
 		}
+		if len(mine) > 0 {
+			deployed = append(deployed, fmt.Sprintf("%s (%s)", s.Name, strings.Join(mine, ", ")))
+		}
 	}
-	if len(busy) == 0 {
+	switch {
+	case len(busy) > 0:
+		return newCheck("Ports", StatusWarn, "in use by another program: %s", strings.Join(busy, ", "))
+	case len(deployed) > 0:
+		return newCheck("Ports", StatusOK, "in use by services CaratCore deployed: %s", strings.Join(deployed, "; "))
+	default:
 		return newCheck("Ports", StatusOK, "%s are free", strings.Join(numbers, ", "))
 	}
-	return newCheck("Ports", StatusWarn, "in use: %s", strings.Join(busy, ", "))
 }
 
 func checkInternet(ctx context.Context, env Env) Check {

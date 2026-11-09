@@ -23,7 +23,8 @@ services. It is read-only: it never installs or modifies anything.
 
 It checks: platform, CPU, available memory, free disk space, privileges
 (root or sudo), Docker CLI / Engine / Compose, ports 53, 3000 and 3001,
-internet access, and Tailscale.
+internet access, and Tailscale. Ports used by a service CaratCore deployed are
+reported as OK.
 
 Example output (Debian 13):
 

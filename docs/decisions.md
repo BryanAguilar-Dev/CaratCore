@@ -106,34 +106,6 @@ explícitamente) o **Pendiente**.
   `apt` a medias, así que las pruebas que cambian el sistema se hacen estando
   delante del portátil. Para probar la instalación, antes hay que desinstalar
   el Docker que ya tiene.
-
-## Propuestas (por confirmar)
-- **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
-  ninguna base técnica.
-- **P5. Ejecutable de terminal**, no un servicio en segundo plano.
-
-## Pendientes
-- Estado persistente (archivo o SQLite), rollback y actualizaciones.
-- AdGuard Home como DNS de Tailscale: riesgo de perder internet si el servidor
-  se apaga; necesita DNS de respaldo.
-- `doctor` solo detecta que sudo existe; el ejecutor ya lo comprueba con
-  `sudo -v` antes de ejecutar (D18).
-- Umbrales de RAM y disco de `doctor`: son estimaciones, hay que medirlas con
-  los servicios reales.
-- Probar los casos de fallo de `doctor` en una máquina real.
-- Verificar la huella de la clave GPG de Docker además de descargarla por
-  HTTPS (la guía oficial solo la descarga).
-- Hecho (2026-11-09): AdGuard Home y Uptime Kuma desplegados en Franc con
-  `install <servicio>`; las etiquetas de imagen existen y funcionan.
-- `doctor` marca WARN los puertos ocupados aunque los ocupe un servicio que
-  desplegó CaratCore; debería reconocerlo.
-- Actualizar servicios (cambiar la versión de la imagen) y desinstalarlos.
-- Puertos publicados por Docker se saltan el cortafuegos (ufw/nftables): el
-  DNS de AdGuard queda abierto a la red local. Documentarlo o limitarlo.
-- Probar en Franc: la detección de conflictos, un fallo a mitad y Ctrl+C
-  durante `apt`. Hecho (2026-11-09): instalación real completa con
-  `install docker`; con el usuario fuera del grupo `docker`, `doctor` muestra
-  el Engine como INFO y `sudo docker ps` funciona.
 - **D20. Servicios de la v1: AdGuard Home y Uptime Kuma** (2026-11-09; antes
   P4). Solo dos: lo difícil de la v1 es la parte que despliega (compose,
   datos, puertos, comprobación, actualización), y con dos servicios se
@@ -173,6 +145,40 @@ explícitamente) o **Pendiente**.
     CaratCore a manejar la contraseña del administrador.
   - La lectura de puertos de `/proc/net` sale de `doctor` a `internal/ports`;
     los puertos que comprueba `doctor` salen del catálogo.
+- **D24. `doctor` reconoce los servicios desplegados** (2026-11-09). Si existe
+  `/opt/caratcore/<id>/compose.yaml`, los puertos ocupados de ese servicio
+  salen como OK ("in use by services CaratCore deployed"); los demás puertos
+  ocupados siguen siendo WARN. Limitación aceptada: `doctor` no confirma que
+  quien escucha en el puerto sea el contenedor del servicio, porque
+  preguntárselo a Docker exige sudo (D17) y `doctor` no lo usa. Si el
+  contenedor está parado y otro programa ocupa el puerto, `doctor` no lo
+  verá.
+
+## Propuestas (por confirmar)
+- **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
+  ninguna base técnica.
+- **P5. Ejecutable de terminal**, no un servicio en segundo plano.
+
+## Pendientes
+- Estado persistente (archivo o SQLite), rollback y actualizaciones.
+- AdGuard Home como DNS de Tailscale: riesgo de perder internet si el servidor
+  se apaga; necesita DNS de respaldo.
+- `doctor` solo detecta que sudo existe; el ejecutor ya lo comprueba con
+  `sudo -v` antes de ejecutar (D18).
+- Umbrales de RAM y disco de `doctor`: son estimaciones, hay que medirlas con
+  los servicios reales.
+- Probar los casos de fallo de `doctor` en una máquina real.
+- Verificar la huella de la clave GPG de Docker además de descargarla por
+  HTTPS (la guía oficial solo la descarga).
+- Hecho (2026-11-09): AdGuard Home y Uptime Kuma desplegados en Franc con
+  `install <servicio>`; las etiquetas de imagen existen y funcionan.
+- Actualizar servicios (cambiar la versión de la imagen) y desinstalarlos.
+- Puertos publicados por Docker se saltan el cortafuegos (ufw/nftables): el
+  DNS de AdGuard queda abierto a la red local. Documentarlo o limitarlo.
+- Probar en Franc: la detección de conflictos, un fallo a mitad y Ctrl+C
+  durante `apt`. Hecho (2026-11-09): instalación real completa con
+  `install docker`; con el usuario fuera del grupo `docker`, `doctor` muestra
+  el Engine como INFO y `sudo docker ps` funciona.
 
 ## Ideas fuera de la v1
 Interfaz web, otras distribuciones, GPU y recomendador avanzado, backups,
