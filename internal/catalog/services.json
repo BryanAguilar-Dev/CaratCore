@@ -17,7 +17,8 @@
       "Open http://<this machine>:3000 and complete the setup wizard.",
       "In the wizard, keep the admin web interface on port 3000 (it suggests 80): CaratCore only publishes port 3000.",
       "Then set this machine as the DNS server of your router or of each device."
-    ]
+    ],
+    "remove_warning": "if your router, your devices or Tailscale use this machine as their DNS server, they will stop resolving names; point them to another DNS server first"
   },
   {
     "id": "uptime-kuma",

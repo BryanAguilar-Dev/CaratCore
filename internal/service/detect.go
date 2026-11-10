@@ -31,6 +31,13 @@ func Detect(ctx context.Context, s catalog.Service) (Host, error) {
 		return h, err
 	}
 
+	switch _, err := os.Stat(Dir(s)); {
+	case err == nil:
+		h.DirExists = true
+	case !errors.Is(err, fs.ErrNotExist):
+		return h, fmt.Errorf("checking %s: %w", Dir(s), err)
+	}
+
 	data, err := os.ReadFile(ComposePath(s))
 	switch {
 	case err == nil:

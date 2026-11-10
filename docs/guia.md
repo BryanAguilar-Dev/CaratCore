@@ -19,8 +19,9 @@ system check -> system model -> recommendation -> installation plan -> deploymen
 
 ```
 cmd/caratcore/        el programa (la CLI). Solo lee argumentos y llama al núcleo
-  main.go             elige el comando: doctor, install, help
+  main.go             elige el comando: doctor, install, uninstall, help
   install.go          `install docker [--dry-run [--json]]`: plan, confirmación, ejecución
+  uninstall.go        `uninstall <servicio> [--purge]`: mismo flujo, sin Docker
 internal/             el núcleo. "internal" = otros proyectos no pueden importarlo
   doctor/             diagnóstico de solo lectura
   osrelease/          lee /etc/os-release (qué distribución y versión es)
@@ -29,9 +30,9 @@ internal/             el núcleo. "internal" = otros proyectos no pueden importa
     docker.asc        clave de firma de Docker, incrustada en el binario
   runner/             ejecuta un plan paso a paso (con sudo si hace falta)
   catalog/            los servicios disponibles (services.json incrustado)
-  service/            genera el plan que despliega un servicio con Compose
+  service/            genera los planes que despliegan y quitan un servicio
   ports/              qué puertos están ocupados (lee /proc/net)
-docs/                 decisiones, esta guía y la lista de prueba de la v0.1.0
+docs/                 decisiones, esta guía y las listas de prueba de cada versión
 go.mod                nombre del módulo y versión de Go; sin dependencias externas
 .gitattributes        fuerza finales de línea LF (estilo Linux)
 ```
@@ -248,6 +249,22 @@ La parte más sutil es **repetir un plan**. Si existe un `compose.yaml`:
 Comparar el contenido entero es más sencillo y más seguro que guardar un
 "estado" aparte, que todavía no existe.
 
+**Desinstalar** (`remove.go`, D30) reutiliza el mismo `Detect` (con un dato
+nuevo, `DirExists`) y otra función pura, `RemovePlan`. Las decisiones están
+en qué pasos salen según el estado:
+- hay `compose.yaml`: paso `stop` (`docker compose down`), aunque el archivo
+  esté editado, porque parar no modifica nada;
+- con `--purge` y la carpeta existe: paso `delete-data` (`rm -r --`). El
+  `--` impide que una ruta empezando por `-` se lea como opción; la ruta sale
+  del catálogo, cuyo `id` ya está validado.
+- `--purge` con un `compose.yaml` editado: se niega. Borrar lo que CaratCore
+  no escribió sería ir contra D23.
+
+La confirmación de `--purge` pide escribir el id del servicio en vez de
+`yes`: así un "yes" por reflejo no basta (`confirm` con `word`, en la CLI).
+El aviso de DNS de AdGuard es un dato del catálogo (`remove_warning`), no un
+`if id == "adguard-home"` en el código.
+
 ### ports
 `InUse` lee `/proc/net/{tcp,udp}[6]` y devuelve claves como `"53/udp"`.
 Antes vivía dentro de `doctor`; al necesitarlo también `service`, se movió a
@@ -312,7 +329,10 @@ pasa (`docs/prueba-v0.1.0.md`).
 
 - **Probar en Franc los casos de fallo**: conflictos, un fallo a mitad y
   Ctrl+C durante `apt` (la instalación real y los servicios ya funcionan).
-- **Gestionar servicios**: actualizar la versión y desinstalar.
+- **v0.2 (D29)**: `uninstall` hecho, falta probarlo en la VM
+  (`docs/prueba-v0.2.0.md`); después, el modo guiado (D31).
+- **Actualizar servicios** (cambiar la versión de la imagen), después de la
+  v0.2.
 - Pendientes de seguridad y diseño: ver la sección "Pendientes" de
   [decisions.md](decisions.md).
 
@@ -342,3 +362,9 @@ pasa (`docs/prueba-v0.1.0.md`).
     respondiendo desde otro equipo de la red?
 17. Si Docker cambiara su clave GPG, ¿qué fallaría en una instalación con
     CaratCore y qué habría que hacer?
+18. ¿Por qué `uninstall` sin `--purge` funciona con un `compose.yaml` editado
+    y con `--purge` no?
+19. Tras `uninstall` sin `--purge`, ¿qué pasa al volver a hacer `install`?
+    ¿Se pierde la configuración de AdGuard Home?
+20. ¿Por qué `docker image prune` no basta para borrar la imagen de un
+    servicio desinstalado?

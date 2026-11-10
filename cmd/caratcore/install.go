@@ -76,7 +76,7 @@ func runInstall(args []string) int {
 	if *dryRun || len(p.Steps) == 0 {
 		return 0
 	}
-	return execute(p, nextSteps)
+	return execute(p, nextSteps, "")
 }
 
 func dockerPlan(ctx context.Context) (plan.Plan, error) {
@@ -104,8 +104,9 @@ func servicePlan(ctx context.Context, s catalog.Service) (plan.Plan, error) {
 }
 
 // execute asks the user to approve p, runs it and then says what to do next.
-func execute(p plan.Plan, nextSteps []string) int {
-	if !confirm(os.Stdin, os.Stdout, len(p.Steps)) {
+// See confirm for word.
+func execute(p plan.Plan, nextSteps []string, word string) int {
+	if !confirm(os.Stdin, os.Stdout, len(p.Steps), word) {
 		fmt.Println("Cancelled. Nothing was executed.")
 		return 1
 	}
@@ -140,12 +141,22 @@ func execute(p plan.Plan, nextSteps []string) int {
 	}
 }
 
-// confirm asks for explicit approval. Anything but "yes" or "y" (including
-// end of input) means no.
-func confirm(in io.Reader, out io.Writer, steps int) bool {
-	fmt.Fprintf(out, "\nRun these %d step(s) on this machine? Type yes to continue: ", steps)
+// confirm asks for explicit approval. With word == "", only "yes" or "y"
+// approve. Otherwise the plan cannot be undone and only word itself approves,
+// so a reflex "yes" is not enough. Anything else (including end of input)
+// means no.
+func confirm(in io.Reader, out io.Writer, steps int, word string) bool {
+	if word == "" {
+		fmt.Fprintf(out, "\nRun these %d step(s) on this machine? Type yes to continue: ", steps)
+	} else {
+		fmt.Fprintf(out, "\nRun these %d step(s) on this machine? This deletes data and cannot be undone. Type %s to continue: ", steps, word)
+	}
 	answer, _ := bufio.NewReader(in).ReadString('\n')
-	answer = strings.ToLower(strings.TrimSpace(answer))
+	answer = strings.TrimSpace(answer)
+	if word != "" {
+		return answer == word
+	}
+	answer = strings.ToLower(answer)
 	return answer == "yes" || answer == "y"
 }
 

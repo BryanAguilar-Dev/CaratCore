@@ -27,6 +27,9 @@ type Service struct {
 	Ports     []Port   `json:"ports"`
 	Volumes   []Volume `json:"volumes"`
 	NextSteps []string `json:"next_steps"`
+	// RemoveWarning, optional, is shown before removing the service when
+	// something else may depend on it.
+	RemoveWarning string `json:"remove_warning,omitempty"`
 }
 
 // Port is published on the host with the same number as in the container.

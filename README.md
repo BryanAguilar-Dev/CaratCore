@@ -4,8 +4,9 @@ CaratCore is an open source tool that helps you understand and build your own
 private infrastructure (a homelab) without hiding what happens on your machine.
 
 > **Status: early development.** `doctor`, installing Docker and deploying
-> AdGuard Home and Uptime Kuma work on Debian 13 amd64. Updating and removing
-> services, backups and rollback do not exist yet; see
+> AdGuard Home and Uptime Kuma work on Debian 13 amd64. Removing services is in
+> development for v0.2. Updating services, backups and rollback do not exist
+> yet; see
 > [docs/decisions.md](docs/decisions.md) for what is planned.
 
 ## The idea
@@ -81,6 +82,16 @@ wizard on port 3000).
 |---|---|---|
 | AdGuard Home | blocks ads and trackers for the devices that use it as DNS | 53 (DNS), 3000 (web) |
 | Uptime Kuma | checks that your services are up and alerts you | 3001 (web) |
+
+`caratcore uninstall <service>` stops the service and removes its container
+(`docker compose down`), with the same plan, `--dry-run` and `yes` approval.
+The data stays in `/opt/caratcore/<service>/`, so installing again picks it
+up. Add `--purge` to also delete that folder and its data: since it cannot be
+undone, you approve by typing the service name instead of `yes`, and
+CaratCore refuses if you edited its `compose.yaml`. The image stays on disk
+(`sudo docker image rm <image>` frees the space), and CaratCore never
+uninstalls Docker. Before removing AdGuard Home, point your router and
+devices to another DNS server, or they will stop resolving names.
 
 ## Network exposure
 

@@ -1,6 +1,6 @@
-// Package service builds the plan that deploys a catalog service with Docker
-// Compose: create its data folders, write its compose.yaml, download the image
-// and start it.
+// Package service builds the plans that deploy a catalog service with Docker
+// Compose (create its data folders, write its compose.yaml, download the image
+// and start it) and that remove it.
 package service
 
 import (
@@ -36,6 +36,9 @@ type Host struct {
 	// ExistingCompose is the content of the service's compose.yaml, or ""
 	// when it does not exist.
 	ExistingCompose string
+	// DirExists is true when the service folder exists, even without a
+	// compose.yaml (for example, a deployment interrupted after step 1).
+	DirExists bool
 }
 
 // DeployPlan returns the steps that deploy s on h. It returns an error when
