@@ -120,7 +120,8 @@ Vuelve a la instantánea "limpia" antes de cada uno.
 1. En GitHub, abrir el borrador `v0.1.0`, revisar las notas y pulsar
    **Publish release**.
 2. Comprobación final en la VM: seguir el paso 2 del README ("Download
-   CaratCore and check it") con `v0.1.0`. `sha256sum -c` debe decir `OK`.
+   CaratCore and check it") con `v0.1.0`, incluido `chmod +x`.
+   `sha256sum -c` debe decir `OK`.
 3. Sustituir el ejemplo de `doctor` del README por la salida real (punto F) y
    apuntar el resultado en `docs/decisions.md`. Esto va a `main`; el binario
    publicado no cambia.

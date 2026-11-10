@@ -25,23 +25,23 @@ It checks: platform, CPU, available memory, free disk space, privileges
 internet access, and Tailscale. Ports used by a service CaratCore deployed are
 reported as OK.
 
-Example output (Debian 13):
+Example output (Debian 13, after `install docker` and `install adguard-home`):
 
 ```
 CaratCore doctor
-Host: franc
+Host: franc1
 
 [OK  ] Platform        Debian GNU/Linux 13 (trixie) amd64: supported target
-[OK  ] CPU             8 logical CPU(s)
-[OK  ] Memory          4.9 GiB available of 5.6 GiB
-[OK  ] Disk            202.7 GiB free of 224.7 GiB on /
-[INFO] Privileges      sudo is available (not verified that this user may use it)
+[OK  ] CPU             4 logical CPU(s)
+[OK  ] Memory          6.6 GiB available of 7.9 GiB
+[OK  ] Disk            18.5 GiB free of 26.9 GiB on /
+[OK  ] Privileges      this user is in the sudo group (sudo will ask for your password)
 [OK  ] Docker CLI      available (version 29.9.3)
 [INFO] Docker Engine   not checked: this user cannot use Docker without sudo (CaratCore uses Docker with sudo)
 [OK  ] Docker Compose  available (version 5.7.0)
-[OK  ] Ports           53, 3000, 3001 are free
+[OK  ] Ports           in use by services CaratCore deployed: AdGuard Home (53/tcp, 53/udp, 3000/tcp)
 [OK  ] Internet        download.docker.com:443 is reachable
-[OK  ] Tailscale       connected
+[INFO] Tailscale       not installed (optional: used for remote access)
 
 Verdict: ready
 ```

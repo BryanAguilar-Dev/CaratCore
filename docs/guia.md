@@ -306,8 +306,8 @@ pasa (`docs/prueba-v0.1.0.md`).
 
 ## 7. Qué falta y hacia dónde va
 
-- **Publicar la v0.1.0** tras la prueba en una VM limpia
-  (`docs/prueba-v0.1.0.md`).
+- v0.1.0 publicada (2026-11-10). Queda probar los casos sin sudo y los de
+  fallo (`docs/prueba-v0.1.0.md`, apartados C, D y G).
 
 - **Probar en Franc los casos de fallo**: conflictos, un fallo a mitad y
   Ctrl+C durante `apt` (la instalación real y los servicios ya funcionan).

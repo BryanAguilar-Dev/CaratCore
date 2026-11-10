@@ -203,6 +203,17 @@ explícitamente) o **Pendiente**.
 - **P5. Ejecutable de terminal**, no un servicio en segundo plano.
 
 ## Pendientes
+- Hecho (2026-11-10): **v0.1.0 publicada** tras probar el binario del
+  borrador en una VM Debian 13 limpia (Hyper-V, `docs/prueba-v0.1.0.md`).
+  Pasaron: checksum y versión; `doctor` en limpio (Privileges OK por grupo
+  `sudo`, D27); `install docker` completo, clave escrita con la huella
+  esperada (D26), `hello-world`, plan vacío al repetir; `install
+  adguard-home` con asistente en el 3000 y DNS respondiendo; repetir el
+  despliegue sin error de puertos; servicios activos tras reiniciar;
+  `doctor` con los puertos del servicio como OK (D24); descarga pública con
+  `wget` y `sha256sum -c`. No probado en la VM: los casos sin sudo (C y D;
+  el instalador de Debian ya dio sudo al usuario), Uptime Kuma (sí probado
+  antes en Franc) y los casos de fallo opcionales (G).
 - Estado persistente (archivo o SQLite), rollback y actualizaciones.
 - AdGuard Home como DNS de Tailscale: riesgo de perder internet si el servidor
   se apaga; necesita DNS de respaldo.
