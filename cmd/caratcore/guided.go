@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/BryanAguilar-Dev/CaratCore/internal/plan"
+	"github.com/BryanAguilar-Dev/CaratCore/internal/term"
 )
 
 // errStopped means the user chose to stop between steps.
@@ -18,15 +19,15 @@ var errStopped = errors.New("stopped by the user")
 // already approved as a whole; this only sets the pace: before each step it
 // shows why it runs, what it teaches and what it does, then waits. Enter runs
 // the step; q, Ctrl+C or end of input stop.
-func guide(in *bufio.Reader, out io.Writer) func(context.Context, int, int, plan.Step) error {
+func guide(in *bufio.Reader, out io.Writer, style term.Style) func(context.Context, int, int, plan.Step) error {
 	return func(ctx context.Context, _, _ int, s plan.Step) error {
-		fmt.Fprintf(out, "Why: %s\n", s.Reason)
+		fmt.Fprintf(out, "%s %s\n", style.Bold("Why:"), s.Reason)
 		if s.Learn != "" {
-			fmt.Fprintf(out, "Learn: %s\n", s.Learn)
+			fmt.Fprintf(out, "%s %s\n", style.Bold("Learn:"), s.Learn)
 		}
-		fmt.Fprintf(out, "Does: %s\n", describe(s))
+		fmt.Fprintf(out, "%s %s\n", style.Bold("Does:"), describe(s))
 		for {
-			fmt.Fprint(out, "Press Enter to run this step, or type q to stop: ")
+			fmt.Fprint(out, style.Yellow("Press Enter to run this step, or type q to stop: "))
 			answer, err := readLine(ctx, in)
 			switch {
 			case err != nil:

@@ -18,6 +18,7 @@ import (
 	"github.com/BryanAguilar-Dev/CaratCore/internal/plan"
 	"github.com/BryanAguilar-Dev/CaratCore/internal/runner"
 	"github.com/BryanAguilar-Dev/CaratCore/internal/service"
+	"github.com/BryanAguilar-Dev/CaratCore/internal/term"
 )
 
 const installUsage = "usage: caratcore install <docker|adguard-home|uptime-kuma> [--guided] [--dry-run [--json]]"
@@ -54,7 +55,7 @@ func runInstall(args []string) int {
 		var s catalog.Service
 		if s, err = catalog.Get(target); err == nil {
 			p, err = servicePlan(ctx, s)
-			nextSteps = s.NextSteps
+			nextSteps = service.DeployNextSteps(s)
 		}
 	}
 	if err == nil {
@@ -136,19 +137,21 @@ func execute(p plan.Plan, nextSteps []string, word string, guided bool) int {
 	r := runner.New()
 	if guided {
 		fmt.Println("\nGuided mode: CaratCore stops before each step to explain it.")
-		r.Before = guide(in, os.Stdout)
+		r.Before = guide(in, os.Stdout, r.Style)
 	}
+	errStyle := term.For(os.Stderr)
 	err := r.Run(ctx, p)
 	var stepErr *runner.StepError
 	switch {
 	case err == nil:
-		fmt.Println("\nDone. Next:")
+		fmt.Printf("\n%s\n", r.Style.Green(fmt.Sprintf("✓ %s: all %d step(s) completed.", p.Title, len(p.Steps))))
+		fmt.Println("Next:")
 		for _, step := range nextSteps {
 			fmt.Println("  - " + step)
 		}
 		return 0
 	case errors.As(err, &stepErr):
-		fmt.Fprintf(os.Stderr, "\n%v\n", err)
+		fmt.Fprintf(os.Stderr, "\n%s\n", errStyle.Red("✗ "+err.Error()))
 		if done := stepErr.Number - 1; done > 0 {
 			fmt.Fprintf(os.Stderr, "Steps 1-%d were completed and were not undone.\n", done)
 		}
@@ -166,7 +169,7 @@ func execute(p plan.Plan, nextSteps []string, word string, guided bool) int {
 		}
 		return 1
 	default:
-		fmt.Fprintf(os.Stderr, "\n%v\n", err)
+		fmt.Fprintf(os.Stderr, "\n%s\n", errStyle.Red("✗ "+err.Error()))
 		return 1
 	}
 }

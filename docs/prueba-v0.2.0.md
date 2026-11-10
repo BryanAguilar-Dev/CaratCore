@@ -22,11 +22,17 @@ binario v0.2.0 copiado (apartados A y B de la v0.1.0).
   igual que con `q`.
 - [ ] `install docker` sin `--guided` en otra instantánea limpia: igual que
   en la v0.1.0, sin pausas.
+- [ ] (obligatorio) Colores: títulos en negrita, `✓ done` en verde, el
+  resumen final en verde con "all N step(s) completed", y al desplegar un
+  servicio, la línea con su carpeta y `caratcore uninstall`.
+- [ ] (obligatorio) `NO_COLOR=1 ./caratcore-linux-amd64 uninstall uptime-kuma`
+  y `... | cat`: sin códigos raros como `^[[1m`; las marcas ✓ / ✗ siguen.
 
 ## U. Desinstalar (D30)
 
-Punto de partida: VM con Docker y los dos servicios desplegados con la
-v0.2.0 (apartados A, B, E y F de la v0.1.0). Haz una instantánea antes.
+Punto de partida: VM con Docker y los dos servicios desplegados (sirve una
+VM con los servicios que desplegó la v0.1.0: el `compose.yaml` no ha
+cambiado). Haz una instantánea antes.
 
 - [ ] (obligatorio) `uninstall uptime-kuma --dry-run`: un paso (`down`) y el
   motivo dice que los datos se quedan.

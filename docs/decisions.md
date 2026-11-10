@@ -242,11 +242,24 @@ explícitamente) o **Pendiente**.
     empezó" (Ctrl+C, `q`) de "falló", y el informe ya no da por ejecutado un
     paso que no empezó (antes pasaba con Ctrl+C). `--guided --dry-run` se
     rechaza: el modo guiado marca el ritmo de una ejecución real.
+  - Colores: paquete `internal/term` (una responsabilidad: estilo de
+    terminal). Su valor cero no pinta, así que tests y salida redirigida
+    quedan en texto plano. Se apagan si la salida no es una terminal, si
+    `NO_COLOR` no está vacío (como dice no-color.org) o si `TERM=dumb`. El
+    plan (`Render`) y `doctor` siguen sin color: es lo que se revisa o se
+    copia. Las marcas ✓ / ✗ salen siempre, con o sin color.
+  - Resumen final: título del plan y pasos completados; al desplegar un
+    servicio, además, dónde está y cómo quitarlo.
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
   ninguna base técnica.
 - **P5. Ejecutable de terminal**, no un servicio en segundo plano.
+- **P8. Idioma según el host** (2026-11-10, idea de Bryan). Posible con la
+  librería estándar (leer `LC_ALL`, `LC_MESSAGES` y `LANG`), pero duplica
+  todos los textos (motivos, `Learn`, errores, `doctor`, catálogo, README) y
+  cada paso nuevo exigiría dos. No antes de cerrar la v0.2. Si se hace,
+  empezar por los `Learn` en español, con un test que exija los dos idiomas.
 
 ## Pendientes
 - Hecho (2026-11-10): **v0.1.0 publicada** tras probar el binario del

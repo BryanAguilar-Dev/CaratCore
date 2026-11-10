@@ -12,6 +12,7 @@ import (
 	"os/exec"
 
 	"github.com/BryanAguilar-Dev/CaratCore/internal/plan"
+	"github.com/BryanAguilar-Dev/CaratCore/internal/term"
 )
 
 // Runner executes plans. Its zero value is not usable: create it with New
@@ -22,6 +23,8 @@ type Runner struct {
 	Sudo bool
 	// Out receives CaratCore's progress messages and the commands' output.
 	Out io.Writer
+	// Style colours the progress messages; its zero value prints plain text.
+	Style term.Style
 	// Before, optional, is called before each step, after its title is
 	// printed. Returning an error stops the plan there, like Ctrl+C: that
 	// step and the rest are not run. The CLI's guided mode uses it to explain
@@ -34,9 +37,10 @@ type Runner struct {
 // New returns a Runner wired to the real terminal.
 func New() Runner {
 	return Runner{
-		Sudo: os.Geteuid() != 0,
-		Out:  os.Stdout,
-		exec: runTerminal,
+		Sudo:  os.Geteuid() != 0,
+		Out:   os.Stdout,
+		Style: term.For(os.Stdout),
+		exec:  runTerminal,
 	}
 }
 
@@ -84,7 +88,7 @@ func (r Runner) Run(ctx context.Context, p plan.Plan) error {
 		if err := ctx.Err(); err != nil {
 			return notStarted(err)
 		}
-		fmt.Fprintf(r.Out, "\n[%d/%d] %s\n", i+1, total, s.Title)
+		fmt.Fprintf(r.Out, "\n%s\n", r.Style.Bold(fmt.Sprintf("[%d/%d] %s", i+1, total, s.Title)))
 		if r.Before != nil {
 			if err := r.Before(ctx, i+1, total, s); err != nil {
 				return notStarted(err)
@@ -95,8 +99,10 @@ func (r Runner) Run(ctx context.Context, p plan.Plan) error {
 			}
 		}
 		if err := r.runStep(s); err != nil {
+			fmt.Fprintln(r.Out, r.Style.Red("✗ failed"))
 			return &StepError{Number: i + 1, Total: total, Step: s, Err: err}
 		}
+		fmt.Fprintln(r.Out, r.Style.Green("✓ done"))
 	}
 	return nil
 }
@@ -114,7 +120,7 @@ func (r Runner) runStep(s plan.Step) error {
 	if s.Root && r.Sudo {
 		args = append([]string{"sudo", "--"}, args...)
 	}
-	fmt.Fprintf(r.Out, "$ %s\n", plan.ShellJoin(args))
+	fmt.Fprintln(r.Out, r.Style.Dim("$ "+plan.ShellJoin(args)))
 	return r.exec(args)
 }
 

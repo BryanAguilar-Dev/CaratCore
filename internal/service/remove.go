@@ -69,6 +69,13 @@ func RemovePlan(s catalog.Service, h Host, purge bool) (plan.Plan, error) {
 	return p, nil
 }
 
+// DeployNextSteps tells the user what to do after deploying s and where it
+// lives.
+func DeployNextSteps(s catalog.Service) []string {
+	next := append([]string{}, s.NextSteps...)
+	return append(next, "Its compose.yaml and data are in "+Dir(s)+"; to remove it: caratcore uninstall "+s.ID)
+}
+
 // RemoveNextSteps tells the user what is left on the machine after removing s.
 func RemoveNextSteps(s catalog.Service, purge bool) []string {
 	var next []string

@@ -32,6 +32,7 @@ internal/             el núcleo. "internal" = otros proyectos no pueden importa
   catalog/            los servicios disponibles (services.json incrustado)
   service/            genera los planes que despliegan y quitan un servicio
   ports/              qué puertos están ocupados (lee /proc/net)
+  term/               colores ANSI, solo si la salida es una terminal
 docs/                 decisiones, esta guía y las listas de prueba de cada versión
 go.mod                nombre del módulo y versión de Go; sin dependencias externas
 .gitattributes        fuerza finales de línea LF (estilo Linux)
@@ -287,6 +288,17 @@ El aviso de DNS de AdGuard es un dato del catálogo (`remove_warning`), no un
 Antes vivía dentro de `doctor`; al necesitarlo también `service`, se movió a
 su paquete (lo mismo que pasó con `osrelease`).
 
+### term
+Pinta texto con códigos ANSI: `\x1b[32m` cambia a verde y `\x1b[0m` vuelve
+al color normal. Solo tiene sentido en una terminal: en un archivo o en un
+`| grep` esos códigos serían basura. `For(os.Stdout)` mira si la salida es
+un "dispositivo de caracteres" (`os.ModeCharDevice`, es decir, una
+terminal) y respeta `NO_COLOR` y `TERM=dumb`.
+
+Patrón a fijarse: el **valor cero útil**. `term.Style{}` no pinta nada, así
+que el `Runner` de los tests (que no llama a `New`) sigue escribiendo texto
+plano sin cambiar ningún test.
+
 **Por qué nunca el grupo `docker`.** Quien puede hablar con el demonio de
 Docker puede arrancar un contenedor con `/` montado y ser root. Meter al
 usuario en el grupo es darle root sin contraseña. CaratCore usa
@@ -346,9 +358,8 @@ pasa (`docs/prueba-v0.1.0.md`).
 
 - **Probar en Franc los casos de fallo**: conflictos, un fallo a mitad y
   Ctrl+C durante `apt` (la instalación real y los servicios ya funcionan).
-- **v0.2 (D29)**: `uninstall` y `--guided` hechos; faltan colores, marcas
-  y resumen final (D31, recortables) y la prueba en la VM
-  (`docs/prueba-v0.2.0.md`).
+- **v0.2 (D29)**: `uninstall`, `--guided`, colores y resumen hechos; falta
+  la prueba en la VM (`docs/prueba-v0.2.0.md`).
 - **Actualizar servicios** (cambiar la versión de la imagen), después de la
   v0.2.
 - Pendientes de seguridad y diseño: ver la sección "Pendientes" de
