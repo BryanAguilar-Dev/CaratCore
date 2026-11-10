@@ -196,32 +196,50 @@ explícitamente) o **Pendiente**.
   Si falla, se borran el borrador y la etiqueta, y nadie lo ha visto. No hace falta un
   pre-instalador: el binario es estático (sin Go ni librerías), y lo único que
   necesita es root o sudo.
+- **D29. Alcance de la v0.2** (2026-11-10; antes P6 y P7): primero
+  `uninstall` (D30), después el modo guiado (D31), en commits separados.
+  Actualizar servicios (cambiar la versión de la imagen) queda para después.
+  La prueba en VM (D28) se amplía con `uninstall`, `--purge` y un
+  `compose.yaml` editado.
+- **D30. `uninstall <servicio>`** (2026-11-10; antes P7). Hoy se puede
+  desplegar pero no quitar nada; es el hueco funcional más grande.
+  - Plan de un paso: `sudo docker compose down` en `/opt/caratcore/<id>/`.
+    Si la carpeta no existe, el plan sale vacío; repetirlo es seguro.
+  - `--purge` borra además `/opt/caratcore/<id>/` (datos incluidos) con
+    `rm -r --`, sin shell. La ruta sale siempre del catálogo, nunca del
+    usuario. Como no se puede deshacer, la confirmación exige escribir el id
+    del servicio, no `yes`.
+  - `down` funciona aunque el `compose.yaml` esté editado: para lo que dice
+    el archivo y no modifica nada. `--purge` se niega en ese caso, por
+    coherencia con D23 ("no se toca").
+  - No borra imágenes (el mensaje final indica `sudo docker image rm <imagen>`;
+    `prune` no sirve porque la imagen tiene etiqueta) ni
+    desinstala Docker.
+  - El motivo del paso de AdGuard Home avisa: si el router o Tailscale lo
+    usan como DNS, la red se queda sin resolver nombres.
+- **D31. Modo guiado** (2026-11-10; antes P6, idea de Bryan: que los pasos
+  no pasen de golpe sino "como en los juegos", explicando poco a poco).
+  - Solo con `--guided`. Nada de "por defecto la primera vez": exigiría
+    estado persistente, que sigue pendiente.
+  - La aprobación no cambia (D18): se muestra el plan entero y se pide `yes`.
+    `--guided` solo marca el ritmo: antes de cada paso muestra `[3/7]`,
+    título, porqué, `Learn` y comando, y espera Enter (`q` para, con el mismo
+    informe que un fallo). Un Enter por paso como única aprobación sería un
+    consentimiento débil (basta dejar la tecla pulsada). Sin "saltar paso":
+    los pasos dependen unos de otros.
+  - `Learn`: campo opcional del paso con una explicación más larga (keyring,
+    deb822, Compose, bind mounts...). `Validate` no lo exige; se escribe
+    solo donde aporta.
+  - Colores y marcas (✓ / ✗) y un resumen final en ambos modos, con ANSI de
+    la librería estándar, desactivados si la salida no es una terminal o si
+    existe `NO_COLOR`. Es lo primero que se recorta si la v0.2 se alarga.
+  - Sin librerías de interfaz de terminal: no hacen falta para esperar un
+    Enter y pintar colores.
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
   ninguna base técnica.
 - **P5. Ejecutable de terminal**, no un servicio en segundo plano.
-- **P6. Modo guiado para la v0.2** (2026-11-10, idea de Bryan: que los pasos
-  no pasen de golpe sino "como en los juegos", explicando poco a poco).
-  Propuesta:
-  - `install --guided` (o por defecto la primera vez): antes de cada paso
-    muestra `[3/7]`, el título, el porqué y el comando, y espera Enter
-    (Enter = ejecutar, `q` = parar). Sin "saltar paso": los pasos dependen
-    unos de otros.
-  - Un campo opcional `Learn` por paso con una explicación más larga
-    (qué es un keyring, qué es Compose...), mostrada solo en modo guiado.
-  - Colores y marcas (✓ / ✗) con códigos ANSI de la librería estándar,
-    desactivados si la salida no es una terminal o si existe `NO_COLOR`.
-  - Al final, un resumen: qué se instaló, dónde está y qué hacer después.
-  - Sin librerías de interfaz de terminal (bubbletea, etc.): no hacen falta
-    para esperar un Enter y pintar colores.
-  - Riesgo: aburrir al que ya sabe. Por eso es opcional y el modo actual
-    (aprobar el plan entero) se mantiene.
-- **P7. Desinstalar servicios** (`uninstall <servicio>`) en la misma v0.2.
-  Hoy un usuario puede desplegar pero no quitar nada; es el hueco funcional
-  más grande. Plan: `docker compose down` y, solo si el usuario lo pide
-  aparte, borrar `/opt/caratcore/<id>/` (los datos). Actualizar la versión
-  de la imagen, después.
 
 ## Pendientes
 - Hecho (2026-11-10): **v0.1.0 publicada** tras probar el binario del
@@ -243,7 +261,7 @@ explícitamente) o **Pendiente**.
 - Probar los casos de fallo de `doctor` en una máquina real.
 - Hecho (2026-11-09): AdGuard Home y Uptime Kuma desplegados en Franc con
   `install <servicio>`; las etiquetas de imagen existen y funcionan.
-- Actualizar servicios (cambiar la versión de la imagen) y desinstalarlos.
+- Actualizar servicios (cambiar la versión de la imagen). Desinstalar: D30.
 - Probar en Franc: la detección de conflictos, un fallo a mitad y Ctrl+C
   durante `apt`. Hecho (2026-11-09): instalación real completa con
   `install docker`; con el usuario fuera del grupo `docker`, `doctor` muestra

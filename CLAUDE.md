@@ -14,8 +14,12 @@ complejidad: el usuario debe entender qué se hace y por qué.
 3. Instalar Docker y Docker Compose como pasos del plan (ver D9).
 4. Servicios: AdGuard Home y Uptime Kuma (Tailscale solo se detecta).
 
+v0.1.0 publicada. En curso, v0.2 (D29):
+5. `uninstall <servicio>` con `--purge` opcional (D30).
+6. Modo guiado `--guided` (D31).
+
 Todo lo que no esté aquí se apunta en `docs/decisions.md` como idea y no se
-implementa hasta cerrar la v1.
+implementa hasta cerrar la versión en curso.
 
 ## Reglas del proyecto
 - No avanzar si el paso anterior no está claro; decisiones justificadas.
