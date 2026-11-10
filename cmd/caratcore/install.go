@@ -20,7 +20,7 @@ import (
 	"github.com/BryanAguilar-Dev/CaratCore/internal/service"
 )
 
-const installUsage = "usage: caratcore install <docker|adguard-home|uptime-kuma> [--dry-run [--json]]"
+const installUsage = "usage: caratcore install <docker|adguard-home|uptime-kuma> [--guided] [--dry-run [--json]]"
 
 // runInstall handles `caratcore install <target> [flags]`.
 func runInstall(args []string) int {
@@ -33,11 +33,11 @@ func runInstall(args []string) int {
 	flags := flag.NewFlagSet("install "+target, flag.ContinueOnError)
 	dryRun := flags.Bool("dry-run", false, "show the plan without executing anything")
 	asJSON := flags.Bool("json", false, "print the plan as JSON (only with --dry-run)")
+	guided := flags.Bool("guided", false, "explain each step and wait for Enter before running it")
 	if err := flags.Parse(args[1:]); err != nil {
 		return 2
 	}
-	if *asJSON && !*dryRun {
-		fmt.Fprintln(os.Stderr, "--json only works with --dry-run: the plan to execute is shown as text")
+	if !validFlags(*dryRun, *asJSON, *guided) {
 		return 2
 	}
 
@@ -76,7 +76,20 @@ func runInstall(args []string) int {
 	if *dryRun || len(p.Steps) == 0 {
 		return 0
 	}
-	return execute(p, nextSteps, "")
+	return execute(p, nextSteps, "", *guided)
+}
+
+// validFlags reports (and explains) combinations that make no sense.
+func validFlags(dryRun, asJSON, guided bool) bool {
+	switch {
+	case asJSON && !dryRun:
+		fmt.Fprintln(os.Stderr, "--json only works with --dry-run: the plan to execute is shown as text")
+		return false
+	case guided && dryRun:
+		fmt.Fprintln(os.Stderr, "--guided paces a real run; --dry-run only shows the plan")
+		return false
+	}
+	return true
 }
 
 func dockerPlan(ctx context.Context) (plan.Plan, error) {
@@ -104,9 +117,13 @@ func servicePlan(ctx context.Context, s catalog.Service) (plan.Plan, error) {
 }
 
 // execute asks the user to approve p, runs it and then says what to do next.
-// See confirm for word.
-func execute(p plan.Plan, nextSteps []string, word string) int {
-	if !confirm(os.Stdin, os.Stdout, len(p.Steps), word) {
+// See confirm for word. guided pauses before each step (D31); the approval is
+// the same either way.
+func execute(p plan.Plan, nextSteps []string, word string, guided bool) int {
+	// One reader for all answers, so a line typed ahead is not lost between
+	// the approval and the guided pauses.
+	in := bufio.NewReader(os.Stdin)
+	if !confirm(in, os.Stdout, len(p.Steps), word) {
 		fmt.Println("Cancelled. Nothing was executed.")
 		return 1
 	}
@@ -116,7 +133,12 @@ func execute(p plan.Plan, nextSteps []string, word string) int {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
 
-	err := runner.New().Run(ctx, p)
+	r := runner.New()
+	if guided {
+		fmt.Println("\nGuided mode: CaratCore stops before each step to explain it.")
+		r.Before = guide(in, os.Stdout)
+	}
+	err := r.Run(ctx, p)
 	var stepErr *runner.StepError
 	switch {
 	case err == nil:
@@ -130,10 +152,18 @@ func execute(p plan.Plan, nextSteps []string, word string) int {
 		if done := stepErr.Number - 1; done > 0 {
 			fmt.Fprintf(os.Stderr, "Steps 1-%d were completed and were not undone.\n", done)
 		}
-		if stepErr.Number < stepErr.Total {
-			fmt.Fprintf(os.Stderr, "Steps %d-%d were not run.\n", stepErr.Number+1, stepErr.Total)
+		firstNotRun := stepErr.Number + 1
+		if stepErr.NotStarted {
+			firstNotRun = stepErr.Number
 		}
-		fmt.Fprintln(os.Stderr, "Fix the problem and run the same command again: it plans from the current state.")
+		if firstNotRun <= stepErr.Total {
+			fmt.Fprintf(os.Stderr, "Steps %d-%d were not run.\n", firstNotRun, stepErr.Total)
+		}
+		if stepErr.NotStarted {
+			fmt.Fprintln(os.Stderr, "Run the same command again to continue: it plans from the current state.")
+		} else {
+			fmt.Fprintln(os.Stderr, "Fix the problem and run the same command again: it plans from the current state.")
+		}
 		return 1
 	default:
 		fmt.Fprintf(os.Stderr, "\n%v\n", err)
@@ -145,13 +175,13 @@ func execute(p plan.Plan, nextSteps []string, word string) int {
 // approve. Otherwise the plan cannot be undone and only word itself approves,
 // so a reflex "yes" is not enough. Anything else (including end of input)
 // means no.
-func confirm(in io.Reader, out io.Writer, steps int, word string) bool {
+func confirm(in *bufio.Reader, out io.Writer, steps int, word string) bool {
 	if word == "" {
 		fmt.Fprintf(out, "\nRun these %d step(s) on this machine? Type yes to continue: ", steps)
 	} else {
 		fmt.Fprintf(out, "\nRun these %d step(s) on this machine? This deletes data and cannot be undone. Type %s to continue: ", steps, word)
 	}
-	answer, _ := bufio.NewReader(in).ReadString('\n')
+	answer, _ := in.ReadString('\n')
 	answer = strings.TrimSpace(answer)
 	if word != "" {
 		return answer == word

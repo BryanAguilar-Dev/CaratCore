@@ -2,13 +2,31 @@
 
 Se sigue el mismo método que en la v0.1.0 (D28, `docs/prueba-v0.1.0.md`):
 etiquetar, probar el binario del borrador en la VM y publicar solo si pasa.
-Esta lista crece con cada parte de la v0.2 (D29); el modo guiado se añadirá
-cuando exista.
+Esta lista crece con cada parte de la v0.2 (D29).
+
+## M. Modo guiado (D31)
+
+Punto de partida: la instantánea "limpia" de la v0.1.0 (sin Docker), con el
+binario v0.2.0 copiado (apartados A y B de la v0.1.0).
+
+- [ ] (obligatorio) `install docker --guided --dry-run`: se niega.
+- [ ] (obligatorio) `install docker --guided`: muestra el plan entero y pide
+  `yes`. Después, en cada paso se ven `[n/7]`, `Why`, `Learn` (en los que lo
+  tienen) y `Does`, y solo continúa con Enter. Escribir otra cosa vuelve a
+  preguntar.
+- [ ] (obligatorio) En el paso 4, escribir `q`: informa de que los pasos 1-3
+  se completaron y que los pasos 4-7 no se ejecutaron. Relanzar `install
+  docker --guided` y terminar: `hello-world` funciona.
+- [ ] (obligatorio) `install uptime-kuma --guided` hasta el paso 2 y pulsar
+  Ctrl+C mientras espera: para al momento, sin pulsar Enter, e informa
+  igual que con `q`.
+- [ ] `install docker` sin `--guided` en otra instantánea limpia: igual que
+  en la v0.1.0, sin pausas.
+
+## U. Desinstalar (D30)
 
 Punto de partida: VM con Docker y los dos servicios desplegados con la
 v0.2.0 (apartados A, B, E y F de la v0.1.0). Haz una instantánea antes.
-
-## U. Desinstalar (D30)
 
 - [ ] (obligatorio) `uninstall uptime-kuma --dry-run`: un paso (`down`) y el
   motivo dice que los datos se quedan.

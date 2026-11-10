@@ -44,9 +44,11 @@ func RemovePlan(s catalog.Service, h Host, purge bool) (plan.Plan, error) {
 			reason += ". Warning: " + s.RemoveWarning
 		}
 		p.Steps = append(p.Steps, plan.Step{
-			ID:      "stop",
-			Title:   "Stop and remove the " + s.Name + " container",
-			Reason:  reason,
+			ID:     "stop",
+			Title:  "Stop and remove the " + s.Name + " container",
+			Reason: reason,
+			Learn: "`docker compose down` removes the containers and the network Compose created for them. " +
+				"It does not touch bind-mounted folders: they are ordinary folders of this machine, which is why the data survives",
 			Command: []string{"docker", "compose", "--file", ComposePath(s), "down"},
 			Root:    true,
 		})
@@ -58,6 +60,8 @@ func RemovePlan(s catalog.Service, h Host, purge bool) (plan.Plan, error) {
 			Title: "Delete " + Dir(s),
 			Reason: "you asked for --purge: this deletes compose.yaml and the data (" + volumePurposes(s) + "). " +
 				"It cannot be undone; copy the folder first if you may need it",
+			Learn: "`rm -r` deletes a folder and everything inside it; on the command line there is no trash to recover it from. " +
+				"`--` marks the end of the options, so the path that follows can never be read as one",
 			Command: []string{"rm", "-r", "--", Dir(s)},
 			Root:    true,
 		})

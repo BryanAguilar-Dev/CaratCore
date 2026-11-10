@@ -93,6 +93,12 @@ CaratCore refuses if you edited its `compose.yaml`. The image stays on disk
 uninstalls Docker. Before removing AdGuard Home, point your router and
 devices to another DNS server, or they will stop resolving names.
 
+Add `--guided` to `install` or `uninstall` to go one step at a time. You
+still approve the whole plan first; then, before each step, CaratCore
+explains why it runs and the ideas behind it (what a signing key or a bind
+mount is) and waits for Enter. Type `q` or press Ctrl+C to stop between
+steps; running the same command again continues from where you are.
+
 ## Network exposure
 
 The ports in the table above are open to every network the machine is on,

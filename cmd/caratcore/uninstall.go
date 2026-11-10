@@ -12,7 +12,7 @@ import (
 	"github.com/BryanAguilar-Dev/CaratCore/internal/service"
 )
 
-const uninstallUsage = "usage: caratcore uninstall <adguard-home|uptime-kuma> [--purge] [--dry-run [--json]]"
+const uninstallUsage = "usage: caratcore uninstall <adguard-home|uptime-kuma> [--purge] [--guided] [--dry-run [--json]]"
 
 // runUninstall handles `caratcore uninstall <service> [flags]`.
 func runUninstall(args []string) int {
@@ -26,11 +26,11 @@ func runUninstall(args []string) int {
 	purge := flags.Bool("purge", false, "also delete the service folder and its data (cannot be undone)")
 	dryRun := flags.Bool("dry-run", false, "show the plan without executing anything")
 	asJSON := flags.Bool("json", false, "print the plan as JSON (only with --dry-run)")
+	guided := flags.Bool("guided", false, "explain each step and wait for Enter before running it")
 	if err := flags.Parse(args[1:]); err != nil {
 		return 2
 	}
-	if *asJSON && !*dryRun {
-		fmt.Fprintln(os.Stderr, "--json only works with --dry-run: the plan to execute is shown as text")
+	if !validFlags(*dryRun, *asJSON, *guided) {
 		return 2
 	}
 	if target == "docker" {
@@ -73,5 +73,5 @@ func runUninstall(args []string) int {
 	if *purge {
 		word = s.ID
 	}
-	return execute(p, service.RemoveNextSteps(s, *purge), word)
+	return execute(p, service.RemoveNextSteps(s, *purge), word, *guided)
 }

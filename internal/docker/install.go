@@ -80,23 +80,29 @@ func InstallPlan(h Host) (plan.Plan, error) {
 
 	p.Steps = []plan.Step{
 		{
-			ID:      "apt-update",
-			Title:   "Refresh the package lists",
-			Reason:  "apt must know the current versions before installing the prerequisites",
+			ID:     "apt-update",
+			Title:  "Refresh the package lists",
+			Reason: "apt must know the current versions before installing the prerequisites",
+			Learn: "apt keeps a local copy of the list of packages each repository offers. " +
+				"`apt-get update` downloads those lists again; it does not install or upgrade anything",
 			Command: []string{"apt-get", "update"},
 			Root:    true,
 		},
 		{
-			ID:      "install-prerequisites",
-			Title:   "Install ca-certificates",
-			Reason:  "apt needs it to verify the HTTPS connection to Docker's repository",
+			ID:     "install-prerequisites",
+			Title:  "Install ca-certificates",
+			Reason: "apt needs it to verify the HTTPS connection to Docker's repository",
+			Learn: "ca-certificates is the list of certificate authorities this system trusts. " +
+				"With it, apt can check that the server it talks to really is download.docker.com",
 			Command: []string{"apt-get", "install", "-y", "ca-certificates"},
 			Root:    true,
 		},
 		{
-			ID:      "create-keyrings-dir",
-			Title:   "Create " + keyringDir,
-			Reason:  "it is the standard place for third-party repository signing keys",
+			ID:     "create-keyrings-dir",
+			Title:  "Create " + keyringDir,
+			Reason: "it is the standard place for third-party repository signing keys",
+			Learn: "A key stored here is trusted only by the repositories that name it (with Signed-By), " +
+				"unlike the old `apt-key`, which trusted every key for every repository",
 			Command: []string{"install", "-m", "0755", "-d", keyringDir},
 			Root:    true,
 		},
@@ -106,6 +112,10 @@ func InstallPlan(h Host) (plan.Plan, error) {
 			Reason: "apt uses this key to check that Docker's packages really come from Docker. " +
 				"It is built into CaratCore, not downloaded; its fingerprint is " + keyFingerprint +
 				" (check it with: gpg --show-keys " + keyPath + ")",
+			Learn: "This is the public half of a key pair. Docker signs its repository with the private half, " +
+				"which only Docker has, and apt checks the signature with this public half: if anyone altered the packages " +
+				"on the way, the check fails and apt refuses them. The fingerprint is a short summary of the key; " +
+				"if it matches the one Docker publishes, it is the same key",
 			File: &plan.File{
 				Path:    keyPath,
 				Content: dockerKey,
@@ -117,6 +127,9 @@ func InstallPlan(h Host) (plan.Plan, error) {
 			ID:     "add-docker-repository",
 			Title:  "Add Docker's apt repository",
 			Reason: "Debian's own docker.io package is older and does not ship the Compose plugin Docker documents",
+			Learn: "A repository is a server apt downloads packages from. This file uses the deb822 format, " +
+				"one `Field: value` per line. Signed-By ties the repository to Docker's key only: " +
+				"no other key on the system can sign packages for it",
 			File: &plan.File{
 				Path:    sourcesPath,
 				Content: sourcesFile(h.Codename, h.Arch),
@@ -132,9 +145,13 @@ func InstallPlan(h Host) (plan.Plan, error) {
 			Root:    true,
 		},
 		{
-			ID:      "install-docker",
-			Title:   "Install Docker Engine, CLI and plugins",
-			Reason:  "Engine runs the containers; the Compose plugin starts the services CaratCore will deploy",
+			ID:     "install-docker",
+			Title:  "Install Docker Engine, CLI and plugins",
+			Reason: "Engine runs the containers; the Compose plugin starts the services CaratCore will deploy",
+			Learn: "docker-ce is the Engine, a background service (dockerd) that manages containers; " +
+				"docker-ce-cli is the `docker` command you type; containerd.io is the layer below that starts and stops them. " +
+				"The buildx plugin builds images, and the compose plugin adds `docker compose`, " +
+				"which starts containers described in a file",
 			Command: append([]string{"apt-get", "install", "-y"}, dockerPackages...),
 			Root:    true,
 		},

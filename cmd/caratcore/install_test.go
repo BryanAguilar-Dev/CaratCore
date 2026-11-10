@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bufio"
 	"io"
 	"strings"
 	"testing"
@@ -21,7 +22,7 @@ func TestConfirm(t *testing.T) {
 		{"", false}, // end of input, e.g. stdin closed
 	}
 	for _, tt := range tests {
-		if got := confirm(strings.NewReader(tt.input), io.Discard, 3, ""); got != tt.want {
+		if got := confirm(bufio.NewReader(strings.NewReader(tt.input)), io.Discard, 3, ""); got != tt.want {
 			t.Errorf("confirm(%q) = %v, want %v", tt.input, got, tt.want)
 		}
 	}
@@ -41,7 +42,7 @@ func TestConfirmWord(t *testing.T) {
 		{"", false},
 	}
 	for _, tt := range tests {
-		if got := confirm(strings.NewReader(tt.input), io.Discard, 2, "uptime-kuma"); got != tt.want {
+		if got := confirm(bufio.NewReader(strings.NewReader(tt.input)), io.Discard, 2, "uptime-kuma"); got != tt.want {
 			t.Errorf("confirm(%q) = %v, want %v", tt.input, got, tt.want)
 		}
 	}

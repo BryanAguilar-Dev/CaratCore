@@ -22,6 +22,11 @@ type Runner struct {
 	Sudo bool
 	// Out receives CaratCore's progress messages and the commands' output.
 	Out io.Writer
+	// Before, optional, is called before each step, after its title is
+	// printed. Returning an error stops the plan there, like Ctrl+C: that
+	// step and the rest are not run. The CLI's guided mode uses it to explain
+	// the step and wait for the user.
+	Before func(ctx context.Context, number, total int, s plan.Step) error
 	// exec runs one command connected to the terminal. Tests replace it.
 	exec func(args []string) error
 }
@@ -35,17 +40,24 @@ func New() Runner {
 	}
 }
 
-// StepError says which step failed. Steps before it were completed and were
-// not undone; steps after it were not run.
+// StepError says at which step the plan stopped. Steps before it were
+// completed and were not undone; steps after it were not run.
 type StepError struct {
-	Number int // 1-based position of the failed step
+	Number int // 1-based position of the step
 	Total  int // steps in the plan
 	Step   plan.Step
-	Err    error
+	// NotStarted is true when the step itself did not run (Ctrl+C, or Before
+	// said stop), false when it ran and failed.
+	NotStarted bool
+	Err        error
 }
 
 func (e *StepError) Error() string {
-	return fmt.Sprintf("step %d/%d (%s) failed: %v", e.Number, e.Total, e.Step.ID, e.Err)
+	what := "failed"
+	if e.NotStarted {
+		what = "not started"
+	}
+	return fmt.Sprintf("step %d/%d (%s) %s: %v", e.Number, e.Total, e.Step.ID, what, e.Err)
 }
 
 func (e *StepError) Unwrap() error { return e.Err }
@@ -66,15 +78,24 @@ func (r Runner) Run(ctx context.Context, p plan.Plan) error {
 
 	total := len(p.Steps)
 	for i, s := range p.Steps {
-		fail := func(err error) error {
-			return &StepError{Number: i + 1, Total: total, Step: s, Err: err}
+		notStarted := func(err error) error {
+			return &StepError{Number: i + 1, Total: total, Step: s, NotStarted: true, Err: err}
 		}
 		if err := ctx.Err(); err != nil {
-			return fail(fmt.Errorf("not started: %w", err))
+			return notStarted(err)
 		}
 		fmt.Fprintf(r.Out, "\n[%d/%d] %s\n", i+1, total, s.Title)
+		if r.Before != nil {
+			if err := r.Before(ctx, i+1, total, s); err != nil {
+				return notStarted(err)
+			}
+			// Ctrl+C may have arrived while Before was waiting.
+			if err := ctx.Err(); err != nil {
+				return notStarted(err)
+			}
+		}
 		if err := r.runStep(s); err != nil {
-			return fail(err)
+			return &StepError{Number: i + 1, Total: total, Step: s, Err: err}
 		}
 	}
 	return nil

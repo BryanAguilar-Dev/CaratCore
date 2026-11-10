@@ -21,6 +21,9 @@ type Step struct {
 	// Reason explains why the step is needed. Every step must have one:
 	// CaratCore never asks the user to approve something unexplained.
 	Reason string `json:"reason"`
+	// Learn, optional, explains the concepts behind the step (what a signing
+	// key or a bind mount is). The guided mode shows it before the step runs.
+	Learn string `json:"learn,omitempty"`
 	// Command is the program and its arguments, run directly without a shell.
 	Command []string `json:"command,omitempty"`
 	// File is a file to create or replace with the given content.

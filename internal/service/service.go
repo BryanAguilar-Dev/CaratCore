@@ -86,6 +86,9 @@ func DeployPlan(s catalog.Service, h Host) (plan.Plan, error) {
 			Title: "Create the data folders in " + Dir(s),
 			Reason: "the service keeps its data on this machine, outside the container, so it survives updates and can be backed up; " +
 				"only root can read it because it may hold password hashes",
+			Learn: "Files written inside a container are lost when the container is replaced, for example to update it. " +
+				"A bind mount links a folder of this machine into the container, so what the service saves there stays here. " +
+				"Mode 0700 means only the owner (root) can open the folder",
 			Command: append([]string{"install", "-d", "-m", "0700"}, dataDirs...),
 			Root:    true,
 		})
@@ -95,20 +98,27 @@ func DeployPlan(s catalog.Service, h Host) (plan.Plan, error) {
 			ID:     "write-compose",
 			Title:  "Write " + ComposePath(s),
 			Reason: "it describes the container (pinned image version, ports and data folders) in a file you can read and edit",
-			File:   &plan.File{Path: ComposePath(s), Content: compose, Mode: 0o644},
-			Root:   true,
+			Learn: "Docker Compose describes containers in a YAML file instead of a long `docker run` command. " +
+				"In `ports`, \"3000:3000\" means host port : container port; in `volumes`, host folder : container folder",
+			File: &plan.File{Path: ComposePath(s), Content: compose, Mode: 0o644},
+			Root: true,
 		},
 		plan.Step{
-			ID:      "pull-image",
-			Title:   "Download the image " + s.Image,
-			Reason:  "downloading first means a network problem stops here, before anything is started",
+			ID:     "pull-image",
+			Title:  "Download the image " + s.Image,
+			Reason: "downloading first means a network problem stops here, before anything is started",
+			Learn: "An image is a read-only package with the program and everything it needs; a container is a running copy of it. " +
+				"The text after `:` is the tag (the version): CaratCore pins it, so it always installs the same software",
 			Command: composeCmd("pull"),
 			Root:    true,
 		},
 		plan.Step{
-			ID:      "start",
-			Title:   "Start " + s.Name,
-			Reason:  "runs the container in the background; it restarts by itself after a reboot or a crash",
+			ID:     "start",
+			Title:  "Start " + s.Name,
+			Reason: "runs the container in the background; it restarts by itself after a reboot or a crash",
+			Learn: "`--detach` returns the terminal to you while the container keeps running. " +
+				"`restart: unless-stopped` in compose.yaml tells Docker to start it again after a reboot or a crash, " +
+				"unless you stopped it yourself",
 			Command: composeCmd("up", "--detach"),
 			Root:    true,
 		},

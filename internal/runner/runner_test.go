@@ -95,11 +95,59 @@ func TestRunStopsWhenCancelled(t *testing.T) {
 	cancel()
 	err := r.Run(ctx, testPlan())
 	var stepErr *StepError
-	if !errors.As(err, &stepErr) || stepErr.Number != 1 || !errors.Is(err, context.Canceled) {
+	if !errors.As(err, &stepErr) || stepErr.Number != 1 || !stepErr.NotStarted || !errors.Is(err, context.Canceled) {
 		t.Fatalf("got %v", err)
 	}
 	if len(*calls) != 0 {
 		t.Errorf("nothing may run after cancel; calls: %q", *calls)
+	}
+}
+
+func TestRunFailedStepIsStarted(t *testing.T) {
+	r, _ := fakeRunner(false, "two")
+	var stepErr *StepError
+	if err := r.Run(context.Background(), testPlan()); !errors.As(err, &stepErr) || stepErr.NotStarted {
+		t.Fatalf("a step that ran and failed must not be NotStarted: %v", err)
+	}
+}
+
+func TestRunBeforeCanStop(t *testing.T) {
+	stop := errors.New("stopped by the user")
+	r, calls := fakeRunner(false, "")
+	var seen []int
+	r.Before = func(_ context.Context, number, total int, s plan.Step) error {
+		seen = append(seen, number)
+		if number == 2 {
+			return stop
+		}
+		return nil
+	}
+	err := r.Run(context.Background(), testPlan())
+	var stepErr *StepError
+	if !errors.As(err, &stepErr) || stepErr.Number != 2 || !stepErr.NotStarted || !errors.Is(err, stop) {
+		t.Fatalf("got %v", err)
+	}
+	if want := [][]string{{"apt-get", "update"}}; !reflect.DeepEqual(*calls, want) {
+		t.Errorf("only step one may run; calls: %q", *calls)
+	}
+	if !reflect.DeepEqual(seen, []int{1, 2}) {
+		t.Errorf("Before called for steps %v, want [1 2]", seen)
+	}
+}
+
+// Ctrl+C while Before waits for the user must not let the step run.
+func TestRunCancelledDuringBefore(t *testing.T) {
+	r, calls := fakeRunner(false, "")
+	ctx, cancel := context.WithCancel(context.Background())
+	r.Before = func(context.Context, int, int, plan.Step) error {
+		cancel()
+		return nil
+	}
+	if err := r.Run(ctx, testPlan()); !errors.Is(err, context.Canceled) {
+		t.Fatalf("got %v", err)
+	}
+	if len(*calls) != 0 {
+		t.Errorf("nothing may run; calls: %q", *calls)
 	}
 }
 

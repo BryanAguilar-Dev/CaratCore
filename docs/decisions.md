@@ -235,6 +235,13 @@ explícitamente) o **Pendiente**.
     existe `NO_COLOR`. Es lo primero que se recorta si la v0.2 se alarga.
   - Sin librerías de interfaz de terminal: no hacen falta para esperar un
     Enter y pintar colores.
+  - Implementación: `runner` gana un gancho opcional `Before`; esperar
+    teclas es cosa de la CLI (`guided.go`), como confirmar (D18). Ctrl+C
+    durante la espera para sin necesidad de Enter, y el runner vuelve a
+    mirar el contexto tras el gancho. `StepError.NotStarted` distingue "no
+    empezó" (Ctrl+C, `q`) de "falló", y el informe ya no da por ejecutado un
+    paso que no empezó (antes pasaba con Ctrl+C). `--guided --dry-run` se
+    rechaza: el modo guiado marca el ritmo de una ejecución real.
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin

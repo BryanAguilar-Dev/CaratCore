@@ -211,8 +211,25 @@ ponen una que solo apunta los comandos y puede fingir fallos. Es la misma
 idea que `Env` en `doctor`, a escala de una sola función.
 
 Confirmar es cosa de la CLI (`confirm` en `install.go`), no de `runner`: el
-núcleo no sabe si hay una persona delante. Recibe `io.Reader`/`io.Writer`, así
-que también se podría probar con un `strings.Reader`.
+núcleo no sabe si hay una persona delante. Recibe un `*bufio.Reader` y un
+`io.Writer`, así que se prueba con un `strings.Reader`. Toda la ejecución
+comparte un único `bufio.Reader`: si cada lectura creara el suyo, el primero
+podría quedarse en su búfer una línea escrita por adelantado.
+
+**Modo guiado** (D31). El runner no sabe nada de teclas: tiene un campo
+opcional `Before`, una función que llama antes de cada paso. Si devuelve un
+error, el plan para ahí. La CLI rellena ese campo con `guide` (`guided.go`),
+que muestra el porqué, el `Learn` y el comando, y espera Enter. Es el mismo
+truco que el campo `exec`: comportamiento que se inyecta desde fuera.
+
+La parte delicada es Ctrl+C mientras se espera: `ReadString` se queda
+bloqueado hasta que llega una línea. `readLine` lee en una goroutine y hace
+`select` entre la línea y `ctx.Done()`: gana lo que llegue antes. Además, el
+runner vuelve a mirar `ctx` después de `Before`, para que un Ctrl+C justo
+antes del Enter no deje pasar el paso.
+
+`StepError.NotStarted` distingue "el paso falló" de "el paso no empezó"
+(Ctrl+C o `q`), para que el informe diga bien qué pasos no se ejecutaron.
 
 ### catalog (qué servicios hay)
 `services.json` describe cada servicio: imagen, puertos, carpetas de datos y
@@ -329,8 +346,9 @@ pasa (`docs/prueba-v0.1.0.md`).
 
 - **Probar en Franc los casos de fallo**: conflictos, un fallo a mitad y
   Ctrl+C durante `apt` (la instalación real y los servicios ya funcionan).
-- **v0.2 (D29)**: `uninstall` hecho, falta probarlo en la VM
-  (`docs/prueba-v0.2.0.md`); después, el modo guiado (D31).
+- **v0.2 (D29)**: `uninstall` y `--guided` hechos; faltan colores, marcas
+  y resumen final (D31, recortables) y la prueba en la VM
+  (`docs/prueba-v0.2.0.md`).
 - **Actualizar servicios** (cambiar la versión de la imagen), después de la
   v0.2.
 - Pendientes de seguridad y diseño: ver la sección "Pendientes" de
@@ -368,3 +386,7 @@ pasa (`docs/prueba-v0.1.0.md`).
     ¿Se pierde la configuración de AdGuard Home?
 20. ¿Por qué `docker image prune` no basta para borrar la imagen de un
     servicio desinstalado?
+21. En `readLine`, ¿por qué el canal se crea con capacidad 1? ¿Qué le pasaría
+    a la goroutine con un canal sin búfer si gana `ctx.Done()`?
+22. ¿Por qué `--guided` no sustituye el `yes` inicial por un Enter en cada
+    paso?
