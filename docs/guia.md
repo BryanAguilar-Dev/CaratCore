@@ -306,7 +306,8 @@ pasa (`docs/prueba-v0.1.0.md`).
 
 ## 7. Qué falta y hacia dónde va
 
-- v0.1.0 publicada (2026-11-10). Queda probar los casos sin sudo y los de
+- v0.1.0 publicada (2026-11-10). Repaso de esa sesión, con ejercicios:
+  [repaso-2026-11-09.md](repaso-2026-11-09.md). Queda probar los casos sin sudo y los de
   fallo (`docs/prueba-v0.1.0.md`, apartados C, D y G).
 
 - **Probar en Franc los casos de fallo**: conflictos, un fallo a mitad y

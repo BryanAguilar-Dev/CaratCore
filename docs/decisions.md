@@ -201,6 +201,27 @@ explícitamente) o **Pendiente**.
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
   ninguna base técnica.
 - **P5. Ejecutable de terminal**, no un servicio en segundo plano.
+- **P6. Modo guiado para la v0.2** (2026-11-10, idea de Bryan: que los pasos
+  no pasen de golpe sino "como en los juegos", explicando poco a poco).
+  Propuesta:
+  - `install --guided` (o por defecto la primera vez): antes de cada paso
+    muestra `[3/7]`, el título, el porqué y el comando, y espera Enter
+    (Enter = ejecutar, `q` = parar). Sin "saltar paso": los pasos dependen
+    unos de otros.
+  - Un campo opcional `Learn` por paso con una explicación más larga
+    (qué es un keyring, qué es Compose...), mostrada solo en modo guiado.
+  - Colores y marcas (✓ / ✗) con códigos ANSI de la librería estándar,
+    desactivados si la salida no es una terminal o si existe `NO_COLOR`.
+  - Al final, un resumen: qué se instaló, dónde está y qué hacer después.
+  - Sin librerías de interfaz de terminal (bubbletea, etc.): no hacen falta
+    para esperar un Enter y pintar colores.
+  - Riesgo: aburrir al que ya sabe. Por eso es opcional y el modo actual
+    (aprobar el plan entero) se mantiene.
+- **P7. Desinstalar servicios** (`uninstall <servicio>`) en la misma v0.2.
+  Hoy un usuario puede desplegar pero no quitar nada; es el hueco funcional
+  más grande. Plan: `docker compose down` y, solo si el usuario lo pide
+  aparte, borrar `/opt/caratcore/<id>/` (los datos). Actualizar la versión
+  de la imagen, después.
 
 ## Pendientes
 - Hecho (2026-11-10): **v0.1.0 publicada** tras probar el binario del
