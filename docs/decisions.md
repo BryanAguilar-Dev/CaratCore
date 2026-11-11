@@ -265,6 +265,13 @@ explícitamente) o **Pendiente**.
   todos los textos (motivos, `Learn`, errores, `doctor`, catálogo, README) y
   cada paso nuevo exigiría dos. No antes de cerrar la v0.2. Si se hace,
   empezar por los `Learn` en español, con un test que exija los dos idiomas.
+- **P9. Windows** (2026-11-11, Bryan: "tendrá que servir también en
+  Windows"). D10 sigue vigente para la v1. Hay que concretar qué significa:
+  (a) Windows como **servidor** (servicios en Docker Desktop/WSL2: otro
+  instalador, red NAT, el equipo se suspende, puerto 53 ocupado por
+  Windows), o (b) Windows como **equipo desde el que se maneja** un servidor
+  Linux (por SSH). (b) encaja mejor con un homelab y con el plan como dato
+  (D2); (a) es otro producto.
 
 ## Pendientes
 - Hecho (2026-11-11): **v0.2.0 publicada** tras probar el borrador en la VM
