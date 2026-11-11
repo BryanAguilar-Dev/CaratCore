@@ -278,6 +278,20 @@ explícitamente) o **Pendiente**.
     iniciar sesión. Propuesta: (a) descartada; en su lugar, una guía
     "convierte tu portátil viejo en servidor Debian" (USB, instalación sin
     escritorio, SSH), ampliando la del README. (b), como idea fuera de la v1.
+- **P10. Manejar el servidor sin vivir en la terminal** (2026-11-11, idea
+  de Bryan: administrarlo desde el PC con Windows o desde el móvil, con algo
+  más visual que comandos). Tres piezas, en este orden:
+  1. **Guía** (solo documentación, ya): Debian sin escritorio en un equipo
+     viejo; entrar por SSH desde Windows (viene de serie) y desde el móvil
+     (app de SSH); fuera de casa, con Tailscale.
+  2. **Homepage** (tras actualizar servicios; ya era candidato de la v1.1):
+     un panel con enlaces a los servicios, que ya tienen su propia web.
+  3. **Panel web propio de CaratCore** (v2): otra interfaz para el mismo
+     plan (D2; el plan ya sale en JSON). Antes de escribir código, una
+     decisión de seguridad: sería un servicio siempre en marcha capaz de
+     ejecutar como root, así que exige autenticación, HTTPS y sesiones, y
+     choca con P5.
+  Visión de producto relacionada: [vision.md](vision.md).
 
 ## Pendientes
 - Hecho (2026-11-11): **v0.2.0 publicada** tras probar el borrador en la VM

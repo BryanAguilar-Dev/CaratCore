@@ -369,8 +369,10 @@ pasa (`docs/prueba-v0.1.0.md`).
   resumen. La prueba en la VM (`docs/prueba-v0.2.0.md`) encontró dos textos
   mal y se aplicó D28 tal cual: borrar borrador y etiqueta, corregir,
   etiquetar de nuevo y repetir solo los casos afectados.
-- **Actualizar servicios** (cambiar la versión de la imagen), después de la
-  v0.2.
+- **Orden acordado (2026-11-11)**: archivo de estado por servicio, script de
+  prueba en la VM, actualizar servicios. En paralelo (solo docs), la guía de Debian con
+  acceso desde Windows o el móvil; después, Homepage (P10). Visión de producto y
+  monetización, como hipótesis: [vision.md](vision.md).
 - Pendientes de seguridad y diseño: ver la sección "Pendientes" de
   [decisions.md](decisions.md).
 
