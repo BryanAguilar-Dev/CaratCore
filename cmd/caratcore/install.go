@@ -153,14 +153,14 @@ func execute(p plan.Plan, nextSteps []string, word string, guided bool) int {
 	case errors.As(err, &stepErr):
 		fmt.Fprintf(os.Stderr, "\n%s\n", errStyle.Red("✗ "+err.Error()))
 		if done := stepErr.Number - 1; done > 0 {
-			fmt.Fprintf(os.Stderr, "Steps 1-%d were completed and were not undone.\n", done)
+			fmt.Fprintf(os.Stderr, "%s completed and not undone.\n", stepRange(1, done))
 		}
 		firstNotRun := stepErr.Number + 1
 		if stepErr.NotStarted {
 			firstNotRun = stepErr.Number
 		}
 		if firstNotRun <= stepErr.Total {
-			fmt.Fprintf(os.Stderr, "Steps %d-%d were not run.\n", firstNotRun, stepErr.Total)
+			fmt.Fprintf(os.Stderr, "%s not run.\n", stepRange(firstNotRun, stepErr.Total))
 		}
 		if stepErr.NotStarted {
 			fmt.Fprintln(os.Stderr, "Run the same command again to continue: it plans from the current state.")
@@ -201,4 +201,13 @@ func printPlan(w io.Writer, p plan.Plan, asJSON bool) error {
 	enc := json.NewEncoder(w)
 	enc.SetIndent("", "  ")
 	return enc.Encode(p)
+}
+
+// stepRange writes "Step 4 was" or "Steps 4-7 were", so a range of one step
+// does not read "Steps 4-4".
+func stepRange(first, last int) string {
+	if first == last {
+		return fmt.Sprintf("Step %d was", first)
+	}
+	return fmt.Sprintf("Steps %d-%d were", first, last)
 }

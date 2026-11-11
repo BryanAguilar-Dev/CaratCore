@@ -66,6 +66,13 @@ func (e *StepError) Error() string {
 
 func (e *StepError) Unwrap() error { return e.Err }
 
+// interrupted gives context.Canceled a text a user understands. Unwrap keeps
+// errors.Is(err, context.Canceled) working.
+type interrupted struct{ cause error }
+
+func (e interrupted) Error() string { return "interrupted (Ctrl+C)" }
+func (e interrupted) Unwrap() error { return e.cause }
+
 // Run executes the steps of p in order. ctx is checked between steps: when it
 // is cancelled (Ctrl+C) no further step starts. A running command is not
 // killed by CaratCore; it receives Ctrl+C from the terminal itself, so
@@ -83,6 +90,9 @@ func (r Runner) Run(ctx context.Context, p plan.Plan) error {
 	total := len(p.Steps)
 	for i, s := range p.Steps {
 		notStarted := func(err error) error {
+			if errors.Is(err, context.Canceled) {
+				err = interrupted{err}
+			}
 			return &StepError{Number: i + 1, Total: total, Step: s, NotStarted: true, Err: err}
 		}
 		if err := ctx.Err(); err != nil {

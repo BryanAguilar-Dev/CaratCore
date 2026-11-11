@@ -98,6 +98,9 @@ func TestRunStopsWhenCancelled(t *testing.T) {
 	if !errors.As(err, &stepErr) || stepErr.Number != 1 || !stepErr.NotStarted || !errors.Is(err, context.Canceled) {
 		t.Fatalf("got %v", err)
 	}
+	if want := "step 1/3 (one) not started: interrupted (Ctrl+C)"; err.Error() != want {
+		t.Errorf("message:\n got %q\nwant %q", err.Error(), want)
+	}
 	if len(*calls) != 0 {
 		t.Errorf("nothing may run after cancel; calls: %q", *calls)
 	}

@@ -250,6 +250,11 @@ explícitamente) o **Pendiente**.
     copia. Las marcas ✓ / ✗ salen siempre, con o sin color.
   - Resumen final: título del plan y pasos completados; al desplegar un
     servicio, además, dónde está y cómo quitarlo.
+  - Prueba en la VM (2026-11-11, `docs/prueba-v0.2.0.md`): con Ctrl+C el
+    informe decía `context canceled` y `Steps 1-1`; ahora dice
+    `interrupted (Ctrl+C)` y `Step 1 was`. Con `NO_COLOR`, la salida de
+    `docker compose` sigue en color porque `sudo` limpia el entorno; se
+    acepta: no es texto de CaratCore y evitarlo ataría el plan a la terminal.
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin

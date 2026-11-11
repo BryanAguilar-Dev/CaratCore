@@ -47,3 +47,17 @@ func TestConfirmWord(t *testing.T) {
 		}
 	}
 }
+
+func TestStepRange(t *testing.T) {
+	for _, c := range []struct {
+		first, last int
+		want        string
+	}{
+		{1, 1, "Step 1 was"},
+		{4, 7, "Steps 4-7 were"},
+	} {
+		if got := stepRange(c.first, c.last); got != c.want {
+			t.Errorf("stepRange(%d, %d) = %q, want %q", c.first, c.last, got, c.want)
+		}
+	}
+}

@@ -232,6 +232,13 @@ antes del Enter no deje pasar el paso.
 `StepError.NotStarted` distingue "el paso falló" de "el paso no empezó"
 (Ctrl+C o `q`), para que el informe diga bien qué pasos no se ejecutaron.
 
+El texto de `context.Canceled` es "context canceled", que no le dice nada al
+usuario. El runner lo envuelve en un tipo `interrupted` que se imprime como
+"interrupted (Ctrl+C)" y cuyo método `Unwrap` devuelve el error original:
+así el mensaje cambia, pero `errors.Is(err, context.Canceled)` sigue siendo
+verdadero. Es el patrón general de Go para cambiar cómo se ve un error sin
+perder qué es (lo encontró la prueba de la v0.2.0 en la VM).
+
 ### catalog (qué servicios hay)
 `services.json` describe cada servicio: imagen, puertos, carpetas de datos y
 qué hacer después de instalar. Va **dentro del binario** gracias a
