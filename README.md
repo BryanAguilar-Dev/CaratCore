@@ -4,9 +4,9 @@ CaratCore is an open source tool that helps you understand and build your own
 private infrastructure (a homelab) without hiding what happens on your machine.
 
 > **Status: early development.** `doctor`, installing Docker and deploying
-> AdGuard Home and Uptime Kuma work on Debian 13 amd64. Removing services is in
-> development for v0.2. Updating services, backups and rollback do not exist
-> yet; see
+> AdGuard Home and Uptime Kuma work on Debian 13 amd64, and since v0.2.0 so do
+> removing services and guided mode. Updating services, backups and rollback
+> do not exist yet; see
 > [docs/decisions.md](docs/decisions.md) for what is planned.
 
 ## The idea

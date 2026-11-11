@@ -365,8 +365,10 @@ pasa (`docs/prueba-v0.1.0.md`).
 
 - **Probar en Franc los casos de fallo**: conflictos, un fallo a mitad y
   Ctrl+C durante `apt` (la instalación real y los servicios ya funcionan).
-- **v0.2 (D29)**: `uninstall`, `--guided`, colores y resumen hechos; falta
-  la prueba en la VM (`docs/prueba-v0.2.0.md`).
+- **v0.2.0 publicada (2026-11-11)**: `uninstall`, `--guided`, colores y
+  resumen. La prueba en la VM (`docs/prueba-v0.2.0.md`) encontró dos textos
+  mal y se aplicó D28 tal cual: borrar borrador y etiqueta, corregir,
+  etiquetar de nuevo y repetir solo los casos afectados.
 - **Actualizar servicios** (cambiar la versión de la imagen), después de la
   v0.2.
 - Pendientes de seguridad y diseño: ver la sección "Pendientes" de

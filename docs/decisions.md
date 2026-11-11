@@ -267,6 +267,10 @@ explícitamente) o **Pendiente**.
   empezar por los `Learn` en español, con un test que exija los dos idiomas.
 
 ## Pendientes
+- Hecho (2026-11-11): **v0.2.0 publicada** tras probar el borrador en la VM
+  `franc1` (`docs/prueba-v0.2.0.md`): 15 de 16 casos (M5, opcional, sin
+  hacer). Los dos textos corregidos (D31) obligaron a rehacer el borrador y
+  la etiqueta; con el binario nuevo se repitieron el checksum, M3 y M4.
 - Hecho (2026-11-10): **v0.1.0 publicada** tras probar el binario del
   borrador en una VM Debian 13 limpia (Hyper-V, `docs/prueba-v0.1.0.md`).
   Pasaron: checksum y versión; `doctor` en limpio (Privileges OK por grupo
