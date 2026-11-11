@@ -272,6 +272,12 @@ explícitamente) o **Pendiente**.
   Windows), o (b) Windows como **equipo desde el que se maneja** un servidor
   Linux (por SSH). (b) encaja mejor con un homelab y con el plan como dato
   (D2); (a) es otro producto.
+  - Caso de Bryan: un portátil viejo con Windows que se quiere usar de
+    servidor. Ahí Windows estorba: Docker Desktop pide virtualización y RAM
+    que un equipo viejo no tiene, y Windows se reinicia, se suspende y exige
+    iniciar sesión. Propuesta: (a) descartada; en su lugar, una guía
+    "convierte tu portátil viejo en servidor Debian" (USB, instalación sin
+    escritorio, SSH), ampliando la del README. (b), como idea fuera de la v1.
 
 ## Pendientes
 - Hecho (2026-11-11): **v0.2.0 publicada** tras probar el borrador en la VM
