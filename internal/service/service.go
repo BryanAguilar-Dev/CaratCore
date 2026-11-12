@@ -113,20 +113,18 @@ func DeployPlan(s catalog.Service, h Host, version string) (plan.Plan, error) {
 			ID:     "write-compose",
 			Title:  "Write " + ComposePath(s),
 			Reason: "it describes the container (pinned image version, ports and data folders) in a file you can read and edit",
-			Learn: "Docker Compose describes containers in a YAML file instead of a long `docker run` command. " +
-				"In `ports`, \"3000:3000\" means host port : container port; in `volumes`, host folder : container folder",
-			File: &plan.File{Path: ComposePath(s), Content: compose, Mode: 0o644},
-			Root: true,
+			Learn:  learnCompose,
+			File:   &plan.File{Path: ComposePath(s), Content: compose, Mode: 0o644},
+			Root:   true,
 		},
 		plan.Step{
 			ID:    "write-state",
 			Title: "Write " + StatePath(s),
 			Reason: "records which CaratCore version wrote compose.yaml and a fingerprint of it, " +
 				"so a later version can tell its own file from one you edited and update it safely",
-			Learn: "A SHA-256 hash is a short fingerprint of a file: changing a single character changes it completely. " +
-				"Comparing fingerprints tells whether compose.yaml changed without keeping a second copy of it",
-			File: &plan.File{Path: StatePath(s), Content: state, Mode: 0o644},
-			Root: true,
+			Learn: learnState,
+			File:  &plan.File{Path: StatePath(s), Content: state, Mode: 0o644},
+			Root:  true,
 		},
 		plan.Step{
 			ID:     "pull-image",
@@ -158,6 +156,14 @@ func unknownOriginReason(h Host, s catalog.Service) string {
 	}
 	return "it was edited after CaratCore " + h.State.CaratCoreVersion + " wrote it"
 }
+
+// Explanations shared by the deploy and update plans.
+const (
+	learnCompose = "Docker Compose describes containers in a YAML file instead of a long `docker run` command. " +
+		"In `ports`, \"3000:3000\" means host port : container port; in `volumes`, host folder : container folder"
+	learnState = "A SHA-256 hash is a short fingerprint of a file: changing a single character changes it completely. " +
+		"Comparing fingerprints tells whether compose.yaml changed without keeping a second copy of it"
+)
 
 func busyPorts(s catalog.Service, inUse map[string]bool) []string {
 	var busy []string

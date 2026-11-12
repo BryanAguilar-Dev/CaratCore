@@ -16,8 +16,10 @@ scp caratcore-linux-amd64 scripts/vm-test.sh <usuario>@<vm>:
 ./vm-test.sh ./caratcore-linux-amd64
 ```
 
-- [ ] (obligatorio) Pide escribir `vm` antes de tocar nada.
-- [ ] (obligatorio) Termina con `Result: N OK, 0 FALLO`.
+- [x] (obligatorio) Pide escribir `vm` antes de tocar nada.
+- [x] (obligatorio) Termina con `Result: N OK, 0 FALLO`. Hecho (2026-11-12,
+  VM `franc1`, binario local `v0.3.0-test`, SHA-256 `d187348c...abd887`):
+  **31 OK, 0 FALLO** a la primera.
 
 Qué comprueba: `version`; `list` en los cuatro estados; `install` escribe
 `caratcore.json` con el hash del `compose.yaml` y la web responde; repetir
@@ -32,7 +34,7 @@ pasos con copia, explica cómo volver atrás y la web vuelve a responder; un
 
 Después del script (deja Uptime Kuma desinstalado).
 
-- [ ] (obligatorio) **Los datos sobreviven a `update`.** `install
+- [x] (obligatorio) **Los datos sobreviven a `update`.** `install
   uptime-kuma`, abre `http://<vm>:3001` y crea la cuenta de administrador.
   Simula otra versión como hace el script:
   ```
@@ -42,20 +44,34 @@ Después del script (deja Uptime Kuma desinstalado).
   printf '{\n  "caratcore_version": "v0.2.0",\n  "image": "louislam/uptime-kuma:2.5.9",\n  "compose_sha256": "%s"\n}\n' $H | sudo tee $D/caratcore.json
   ```
   `update uptime-kuma --guided`: cada paso muestra `Why` y `Learn`. Al
-  terminar, entra con la misma cuenta.
-- [ ] (obligatorio) **Volver atrás.** Ejecuta los comandos de "To go back
+  terminar, entra con la misma cuenta. Hecho (2026-11-12): 6 pasos con `Why`
+  y `Learn`, y la misma cuenta entra desde el PC de Bryan (no solo desde la
+  VM).
+- [x] (obligatorio) **Volver atrás.** Ejecuta los comandos de "To go back
   to it" que mostró `update`, tal cual. Uptime Kuma arranca con la copia y
   `list` dice `update available` (la copia es la "versión vieja").
-  `update uptime-kuma` lo deja otra vez `up to date`.
-- [ ] (obligatorio) **`q` a mitad.** Repite la simulación y `update
+  `update uptime-kuma` lo deja otra vez `up to date`. Hecho (2026-11-12): los
+  comandos impresos funcionan copiados tal cual, `list` dice `update
+  available` y la cuenta sigue entrando.
+- [x] (obligatorio) **`q` a mitad.** Repite la simulación y `update
   uptime-kuma --guided`; en el paso 4 escribe `q`. El informe dice que los
   pasos 1-3 se completaron (el servicio está **parado**). `list` sigue en
   `update available`; `update uptime-kuma` (otra copia nueva) termina bien.
-- [ ] **Aviso de DNS.** `install adguard-home`, simula otra versión igual
+  Hecho (2026-11-12) con `q` en el paso 3: informe "Steps 1-2 were
+  completed", `docker ps` vacío (servicio parado), `list` en `update
+  available`, y repetir `update` termina los 6 pasos; la web funciona.
+- [x] **Aviso de DNS.** `install adguard-home`, simula otra versión igual
   que arriba (con su carpeta y su imagen) y `update adguard-home --dry-run`:
-  el paso 2 avisa de que la red se queda sin DNS.
-- [ ] `update docker`: se niega y explica que se actualiza con apt.
-- [ ] `list` sin sudo y con un usuario sin el grupo `docker`: funciona.
+  el paso 2 avisa de que la red se queda sin DNS. Hecho (2026-11-12).
+- [x] `update docker`: se niega y explica que se actualiza con apt. Hecho.
+- [x] `list` sin sudo y con un usuario sin el grupo `docker`: funciona.
+  Hecho (`id` sin el grupo `docker`).
+- [x] **Adopción en la VM** (ensayo de F): el AdGuard que desplegó la v0.2
+  sale `up to date; no caratcore.json yet`, y `update adguard-home` lo
+  adopta en 2 pasos (`write-state`, `start`), sin copia ni `stop`. De paso:
+  con el `compose.yaml` aún modificado por la simulación y sin
+  `caratcore.json`, `list` dice `edited` y `update` se niega explicando por
+  qué (correcto, D32).
 
 ## F. Franc (servicios desplegados con la v0.1)
 
@@ -79,4 +95,7 @@ delante de la máquina (D19).
 
 ## Defectos encontrados
 
-(Se rellena durante la prueba.)
+- M1: en `update`, los pasos `write-compose` y `write-state` no tienen
+  `Learn`, y en `install` `write-state` sí. Incoherencia de textos, menor.
+  **Corregido**: los textos son constantes compartidas y un test exige
+  `Learn` en todos los pasos de `update`.

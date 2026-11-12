@@ -156,3 +156,17 @@ func TestUpdatePlanWarnsAboutDNS(t *testing.T) {
 		t.Errorf("stop step must warn about DNS: %+v", p.Steps[1])
 	}
 }
+
+// --guided shows Learn before each step: every update step explains its
+// idea, as the deploy plan does (found in the v0.3.0 VM test, M1).
+func TestUpdatePlanLearn(t *testing.T) {
+	p, err := UpdatePlan(mustGet(t, "uptime-kuma"), otherVersionHost(t, "uptime-kuma"), "v0.3.0", updateTime)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, step := range p.Steps {
+		if step.Learn == "" {
+			t.Errorf("step %s has no Learn", step.ID)
+		}
+	}
+}

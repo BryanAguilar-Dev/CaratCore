@@ -42,8 +42,9 @@ func UpdatePlan(s catalog.Service, h Host, version string, now time.Time) (plan.
 		Title: "Write " + StatePath(s),
 		Reason: "records which CaratCore version wrote compose.yaml and a fingerprint of it, " +
 			"so CaratCore can tell its own file from one you edited",
-		File: &plan.File{Path: StatePath(s), Content: state, Mode: 0o644},
-		Root: true,
+		Learn: learnState,
+		File:  &plan.File{Path: StatePath(s), Content: state, Mode: 0o644},
+		Root:  true,
 	}
 	start := plan.Step{
 		ID:     "start",
@@ -111,6 +112,7 @@ func UpdatePlan(s catalog.Service, h Host, version string, now time.Time) (plan.
 			ID:     "write-compose",
 			Title:  "Write " + ComposePath(s),
 			Reason: "replaces the file CaratCore " + h.State.CaratCoreVersion + " wrote (image " + h.State.Image + ") with the one this version writes (image " + s.Image + ")",
+			Learn:  learnCompose,
 			File:   &plan.File{Path: ComposePath(s), Content: compose, Mode: 0o644},
 			Root:   true,
 		},
