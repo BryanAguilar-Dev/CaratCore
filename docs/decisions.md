@@ -328,6 +328,19 @@ explícitamente) o **Pendiente**.
      ejecutar como root, así que exige autenticación, HTTPS y sesiones, y
      choca con P5.
   Visión de producto relacionada: [vision.md](vision.md).
+- **P11. Hoja de ruta** (2026-11-12, propuesta de Claude). Una versión, un
+  tema; cada una se prueba en la VM y en Franc antes de publicarla (D28).
+  Tras la v0.3, enseñarla en r/selfhosted: lo que pida la gente puede
+  cambiar el orden a partir de la v0.5.
+  | Versión | Tema | Contenido |
+  |---|---|---|
+  | v0.3 | Mantener | estado por servicio, `update` con copia de datos, `list`, script de prueba (D32) |
+  | v0.4 | Acceso fácil | Homepage; guía "portátil viejo → Debian + SSH desde Windows y el móvil" (P10.1) |
+  | v0.5 | Copias de seguridad | `backup` y `restore` de un servicio |
+  | v0.6 | HTTPS | `tailscale serve`; Vaultwarden como primer servicio que lo necesita |
+  | v0.7 | Más alcance | binarios arm64, experimento de Windows con WSL (P9), Jellyfin o Nextcloud si se piden |
+  | v1.0 | Estable | todo probado en hardware real, `.deb` con `apt upgrade`, releases firmadas |
+  | v2 | Panel web | ver y aprobar el mismo plan desde el navegador (P10.3) |
 
 ## Pendientes
 - Hecho (2026-11-11): **v0.2.0 publicada** tras probar el borrador en la VM
