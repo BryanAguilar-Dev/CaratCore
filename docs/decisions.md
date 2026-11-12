@@ -255,6 +255,34 @@ explícitamente) o **Pendiente**.
     `interrupted (Ctrl+C)` y `Step 1 was`. Con `NO_COLOR`, la salida de
     `docker compose` sigue en color porque `sudo` limpia el entorno; se
     acepta: no es texto de CaratCore y evitarlo ataría el plan a la terminal.
+- **D32. Alcance de la v0.3: mantener lo desplegado** (2026-11-12). Hoy no
+  se puede actualizar un servicio, y un servidor sin actualizar acaba siendo
+  inseguro. Bloques, en orden y en commits separados:
+  1. **Archivo de estado por servicio** (resuelve la deuda de D23): al
+     desplegar se escribe `/opt/caratcore/<id>/caratcore.json` con la versión
+     de CaratCore, la imagen y el hash del `compose.yaml` escrito. Así se
+     distingue "editado a mano" de "escrito por otra versión". Va en la
+     carpeta del servicio y no en `/var/lib/caratcore`: queda a la vista y
+     `--purge` lo borra con el resto.
+  2. **Script de prueba en la VM**: los casos no interactivos dicen OK o
+     FALLO solos; Bryan hace solo lo que necesita una persona (Ctrl+C,
+     colores, navegador).
+  3. **`update <servicio>`**: escribir el `compose.yaml` con la imagen nueva,
+     `pull` y `up -d`. Se actualiza **solo a la imagen del catálogo** del
+     binario, no a la última de Docker Hub: versiones fijas y probadas, como
+     hasta ahora; para tener imágenes nuevas se actualiza CaratCore. Si el
+     `compose.yaml` fue editado a mano, se niega y explica por qué (D23).
+     Antes de cambiar la imagen, el plan copia los datos del servicio a una
+     carpeta `.bak` con fecha: una imagen nueva puede migrarlos sin vuelta
+     atrás (Uptime Kuma 1→2). No son backups completos. Dónde va la copia
+     y qué hace `--purge` con ella se decide al implementar.
+  4. **`list`** (opcional): servicios instalados, su imagen y si están al
+     día. Es lo primero que se recorta si la v0.3 se alarga.
+
+  Fuera de la v0.3: Homepage (v0.4, depende de poder actualizar), Windows
+  (P9) e idioma (P8). Aparte del código, y sin esperar a la v0.3: enseñar la
+  v0.2 en r/selfhosted o r/homelab y apuntar qué preguntan y qué piden
+  ([vision.md](vision.md)).
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin
@@ -317,7 +345,8 @@ explícitamente) o **Pendiente**.
 - Probar los casos de fallo de `doctor` en una máquina real.
 - Hecho (2026-11-09): AdGuard Home y Uptime Kuma desplegados en Franc con
   `install <servicio>`; las etiquetas de imagen existen y funcionan.
-- Actualizar servicios (cambiar la versión de la imagen). Desinstalar: D30.
+- Actualizar servicios (cambiar la versión de la imagen): en curso, D32.
+  Desinstalar: D30.
 - Probar en Franc: la detección de conflictos, un fallo a mitad y Ctrl+C
   durante `apt`. Hecho (2026-11-09): instalación real completa con
   `install docker`; con el usuario fuera del grupo `docker`, `doctor` muestra
