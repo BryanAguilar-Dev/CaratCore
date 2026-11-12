@@ -84,19 +84,26 @@ Franc tiene AdGuard Home y Uptime Kuma desplegados antes de que existiera
 `caratcore.json`. Es la prueba de que no hace falta migración (D32). Estar
 delante de la máquina (D19).
 
-- [ ] (obligatorio) `list`: los dos `up to date; no caratcore.json yet`.
+- [x] (obligatorio) `list`: los dos `up to date; no caratcore.json yet`.
   Si alguno sale `edited`: se desplegaron el 2026-11-09 con un binario
   anterior a la v0.1.0, y su plantilla pudo ser distinta. Compara
   `cat /opt/caratcore/<id>/compose.yaml` con el archivo que muestra
   `install <id> --dry-run` y apunta la diferencia aquí abajo antes de
   seguir.
-- [ ] (obligatorio) `update uptime-kuma --dry-run`: 2 pasos (`write-state`
+- [x] (obligatorio) `update uptime-kuma --dry-run`: 2 pasos (`write-state`
   y `start`), sin copia. Ejecutarlo: el panel sigue con sus monitores.
-- [ ] (obligatorio) Lo mismo con `adguard-home`. El paso `start` no
+- [x] (obligatorio) Lo mismo con `adguard-home`. El paso `start` no
   reinicia el contenedor (Compose no cambia nada), así que el DNS no se
   corta.
-- [ ] (obligatorio) `list`: los dos `up to date`, sin aviso.
-- [ ] `doctor`: igual que antes de la prueba.
+- [x] (obligatorio) `list`: los dos `up to date`, sin aviso.
+- [x] `doctor`: igual que antes de la prueba.
+
+Hecho (2026-11-12, binario publicado `v0.3.0` descargado con `wget`, suma
+correcta): los dos servicios, desplegados el 2026-11-09 con un binario
+anterior a la v0.1.0, se adoptan sin migración; la plantilla no había
+cambiado. Los paneles responden desde el PC de Bryan (muestran su asistente
+inicial: nunca se configuraron en Franc). `doctor`: `ready`, con los puertos
+como "in use by services CaratCore deployed".
 
 ## Defectos encontrados
 

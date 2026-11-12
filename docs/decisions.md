@@ -391,7 +391,7 @@ explícitamente) o **Pendiente**.
   textos (`Learn` en `update`) se corrigió antes de etiquetar. La prueba en
   Franc (F) se hace **después** de publicar, por decisión de Bryan: el
   riesgo es bajo (si algo no cuadra, CaratCore se niega a tocarlo) y lo que
-  encuentre irá a una v0.3.1.
+  encuentre irá a una v0.3.1. Hecho el mismo día: F pasó sin defectos.
 - Hecho (2026-11-11): **v0.2.0 publicada** tras probar el borrador en la VM
   `franc1` (`docs/prueba-v0.2.0.md`): 15 de 16 casos (M5, opcional, sin
   hacer). Los dos textos corregidos (D31) obligaron a rehacer el borrador y
