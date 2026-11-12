@@ -28,7 +28,7 @@ func TestDeployPlanEveryService(t *testing.T) {
 	}
 	for _, s := range services {
 		t.Run(s.ID, func(t *testing.T) {
-			p, err := DeployPlan(s, readyHost())
+			p, err := DeployPlan(s, readyHost(), "v0.3.0")
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -99,7 +99,7 @@ func TestDeployPlanRefuses(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			_, err := DeployPlan(s, tt.host)
+			_, err := DeployPlan(s, tt.host, "v0.3.0")
 			if err == nil || !strings.Contains(err.Error(), tt.wantErr) {
 				t.Fatalf("got %v, want error containing %q", err, tt.wantErr)
 			}
@@ -118,7 +118,7 @@ func TestDeployPlanRepeatable(t *testing.T) {
 	h := readyHost()
 	h.ExistingCompose = compose
 	h.PortsInUse = map[string]bool{"53/udp": true, "53/tcp": true, "3000/tcp": true}
-	if _, err := DeployPlan(s, h); err != nil {
+	if _, err := DeployPlan(s, h, "v0.3.0"); err != nil {
 		t.Fatalf("re-running must be allowed: %v", err)
 	}
 }

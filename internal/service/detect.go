@@ -45,5 +45,13 @@ func Detect(ctx context.Context, s catalog.Service) (Host, error) {
 	case !errors.Is(err, fs.ErrNotExist):
 		return h, fmt.Errorf("reading %s: %w", ComposePath(s), err)
 	}
+
+	data, err = os.ReadFile(StatePath(s))
+	switch {
+	case err == nil:
+		h.State = parseState(data)
+	case !errors.Is(err, fs.ErrNotExist):
+		return h, fmt.Errorf("reading %s: %w", StatePath(s), err)
+	}
 	return h, nil
 }

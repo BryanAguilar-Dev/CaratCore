@@ -72,9 +72,12 @@ that is equivalent to giving it root: use `sudo docker ...`.
 `caratcore install adguard-home` and `caratcore install uptime-kuma` deploy
 those services with Docker Compose, with the same plan, `--dry-run` and
 approval as Docker. Each service lives in `/opt/caratcore/<service>/`: its
-`compose.yaml` (readable, with a pinned image version) and its data folders.
-CaratCore refuses to deploy when Docker is missing, when a port is used by
-another program, or when you edited the `compose.yaml` it wrote. After
+`compose.yaml` (readable, with a pinned image version), its data folders and
+`caratcore.json`, which records the CaratCore version that wrote
+`compose.yaml` and a SHA-256 fingerprint of it, so CaratCore can tell its own
+file from one you edited. CaratCore refuses to deploy when Docker is missing,
+when a port is used by another program, or when you edited the
+`compose.yaml` it wrote. After
 installing, it tells you what to do next (for example, AdGuard Home's setup
 wizard on port 3000).
 

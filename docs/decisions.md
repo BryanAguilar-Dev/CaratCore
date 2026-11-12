@@ -264,6 +264,14 @@ explícitamente) o **Pendiente**.
      distingue "editado a mano" de "escrito por otra versión". Va en la
      carpeta del servicio y no en `/var/lib/caratcore`: queda a la vista y
      `--purge` lo borra con el resto.
+     Hecho (2026-11-12): paso `write-state` justo después de
+     `write-compose`. Un `compose.yaml` de otra versión sin tocar hace que
+     `install` se niegue nombrando versión e imagen (hasta que exista
+     `update`) y `--purge` lo permite. Sin `caratcore.json`, o con uno
+     ilegible, un archivo distinto se trata como editado. Lo desplegado con
+     la v0.1 o la v0.2 coincide con lo que escribe esta versión (el
+     catálogo no ha cambiado), así que repetir `install` escribe el estado
+     sin tocar nada más: no hace falta migración.
   2. **Script de prueba en la VM**: los casos no interactivos dicen OK o
      FALLO solos; Bryan hace solo lo que necesita una persona (Ctrl+C,
      colores, navegador).

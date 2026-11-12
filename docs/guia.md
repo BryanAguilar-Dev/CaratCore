@@ -271,8 +271,23 @@ La parte más sutil es **repetir un plan**. Si existe un `compose.yaml`:
   comprueban puertos, porque probablemente los ocupa el propio servicio);
 - distinto: lo cambió el usuario u otra versión, y CaratCore no lo toca.
 
-Comparar el contenido entero es más sencillo y más seguro que guardar un
-"estado" aparte, que todavía no existe.
+Comparar con lo que escribiría **esta** versión falla en cuanto una versión
+nueva cambie la imagen: el archivo de la anterior parecería editado. Por eso
+(D32, `state.go`) el plan escribe también `caratcore.json` con la versión, la
+imagen y el **hash SHA-256** del `compose.yaml`. `composeOrigin` clasifica el
+archivo encontrado en cuatro casos: no hay, es de esta versión, es de otra
+versión sin tocar (su hash coincide con el guardado) o no se sabe (editado, o
+sin `caratcore.json`). Se guarda un hash y no una copia porque basta para
+saber si cambió y no hay dos versiones del mismo archivo que puedan
+desincronizarse. Un `caratcore.json` ilegible se trata como si no existiera:
+un estado roto no demuestra nada.
+
+Conceptos de Go nuevos: `crypto/sha256` (`Sum256` devuelve un array de 32
+bytes; `sum[:]` lo convierte en slice para `hex.EncodeToString`),
+`encoding/json` con etiquetas de campo (`` `json:"compose_sha256"` ``) e
+`iota`, que numera constantes (`originNone` = 0, `originThisVersion` = 1...).
+La versión llega como parámetro de `DeployPlan` desde `main`, así el núcleo
+no depende de la CLI.
 
 **Desinstalar** (`remove.go`, D30) reutiliza el mismo `Detect` (con un dato
 nuevo, `DirExists`) y otra función pura, `RemovePlan`. Las decisiones están
@@ -283,7 +298,8 @@ en qué pasos salen según el estado:
   `--` impide que una ruta empezando por `-` se lea como opción; la ruta sale
   del catálogo, cuyo `id` ya está validado.
 - `--purge` con un `compose.yaml` editado: se niega. Borrar lo que CaratCore
-  no escribió sería ir contra D23.
+  no escribió sería ir contra D23. Si lo escribió otra versión y nadie lo
+  tocó (D32), sí se permite: sigue siendo de CaratCore.
 
 La confirmación de `--purge` pide escribir el id del servicio en vez de
 `yes`: así un "yes" por reflejo no basta (`confirm` con `word`, en la CLI).

@@ -110,7 +110,7 @@ func servicePlan(ctx context.Context, s catalog.Service) (plan.Plan, error) {
 	if err != nil {
 		return plan.Plan{}, fmt.Errorf("error: %w", err)
 	}
-	p, err := service.DeployPlan(s, host)
+	p, err := service.DeployPlan(s, host, version)
 	if err != nil {
 		return p, fmt.Errorf("cannot plan the deployment of %s: %w", s.Name, err)
 	}

@@ -39,12 +39,16 @@ type Host struct {
 	// DirExists is true when the service folder exists, even without a
 	// compose.yaml (for example, a deployment interrupted after step 1).
 	DirExists bool
+	// State is the service's caratcore.json, or nil when it does not exist
+	// or cannot be read.
+	State *State
 }
 
-// DeployPlan returns the steps that deploy s on h. It returns an error when
+// DeployPlan returns the steps that deploy s on h. version is the running
+// CaratCore version, recorded in the state file. It returns an error when
 // CaratCore should not touch the system: no Docker, ports taken by something
-// else, or a compose.yaml that the user changed.
-func DeployPlan(s catalog.Service, h Host) (plan.Plan, error) {
+// else, or a compose.yaml that this version did not write.
+func DeployPlan(s catalog.Service, h Host, version string) (plan.Plan, error) {
 	p := plan.Plan{Title: "Deploy " + s.Name}
 
 	if !h.Linux {
@@ -58,18 +62,26 @@ func DeployPlan(s catalog.Service, h Host) (plan.Plan, error) {
 	if err != nil {
 		return p, err
 	}
-	switch h.ExistingCompose {
-	case "":
+	switch composeOrigin(h, compose) {
+	case originNone:
 		// First deployment: the ports must be free.
 		if busy := busyPorts(s, h.PortsInUse); len(busy) > 0 {
 			return p, fmt.Errorf("ports already in use by another program: %s; free them and try again", strings.Join(busy, ", "))
 		}
-	case compose:
+	case originThisVersion:
 		// Same file CaratCore would write: a previous run was interrupted or
 		// the service is already running. Every step is safe to repeat, and
 		// the ports are probably taken by the service itself.
+	case originOtherVersion:
+		return p, fmt.Errorf("%s was written by CaratCore %s with the image %s; this version deploys %s and cannot update services yet, so it does not change it",
+			ComposePath(s), h.State.CaratCoreVersion, h.State.Image, s.Image)
 	default:
-		return p, fmt.Errorf("%s exists and is not the file this CaratCore version would write (edited by hand, or written by another version); CaratCore does not change it. Review it or move it away to deploy again", ComposePath(s))
+		return p, fmt.Errorf("%s exists and is not the file this CaratCore version would write; %s. CaratCore does not change it. Review it or move it away to deploy again",
+			ComposePath(s), unknownOriginReason(h, s))
+	}
+	state, err := stateFile(State{CaratCoreVersion: version, Image: s.Image, ComposeSHA256: hashCompose(compose)})
+	if err != nil {
+		return p, fmt.Errorf("generating %s: %w", StatePath(s), err)
 	}
 
 	dataDirs := make([]string, len(s.Volumes))
@@ -104,6 +116,16 @@ func DeployPlan(s catalog.Service, h Host) (plan.Plan, error) {
 			Root: true,
 		},
 		plan.Step{
+			ID:    "write-state",
+			Title: "Write " + StatePath(s),
+			Reason: "records which CaratCore version wrote compose.yaml and a fingerprint of it, " +
+				"so a later version can tell its own file from one you edited and update it safely",
+			Learn: "A SHA-256 hash is a short fingerprint of a file: changing a single character changes it completely. " +
+				"Comparing fingerprints tells whether compose.yaml changed without keeping a second copy of it",
+			File: &plan.File{Path: StatePath(s), Content: state, Mode: 0o644},
+			Root: true,
+		},
+		plan.Step{
 			ID:     "pull-image",
 			Title:  "Download the image " + s.Image,
 			Reason: "downloading first means a network problem stops here, before anything is started",
@@ -124,6 +146,14 @@ func DeployPlan(s catalog.Service, h Host) (plan.Plan, error) {
 		},
 	)
 	return p, nil
+}
+
+// unknownOriginReason explains why CaratCore cannot vouch for a compose.yaml.
+func unknownOriginReason(h Host, s catalog.Service) string {
+	if h.State == nil {
+		return "there is no valid " + StatePath(s) + " to tell which CaratCore version wrote it, so it may have been edited by hand"
+	}
+	return "it was edited after CaratCore " + h.State.CaratCoreVersion + " wrote it"
 }
 
 func busyPorts(s catalog.Service, inUse map[string]bool) []string {

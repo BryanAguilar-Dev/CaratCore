@@ -31,8 +31,11 @@ func RemovePlan(s catalog.Service, h Host, purge bool) (plan.Plan, error) {
 			if err != nil {
 				return p, err
 			}
-			if h.ExistingCompose != compose {
-				return p, fmt.Errorf("%s is not the file this CaratCore version would write (edited by hand, or written by another version); --purge does not delete what CaratCore did not write. Run uninstall without --purge, then review %s and delete it yourself", ComposePath(s), Dir(s))
+			// A file another CaratCore version wrote and nobody edited is
+			// still CaratCore's own, so --purge may delete it.
+			if composeOrigin(h, compose) == originUnknown {
+				return p, fmt.Errorf("CaratCore cannot vouch for %s: %s. --purge does not delete what CaratCore did not write. Run uninstall without --purge, then review %s and delete it yourself",
+					ComposePath(s), unknownOriginReason(h, s), Dir(s))
 			}
 		}
 
