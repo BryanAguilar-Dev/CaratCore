@@ -73,5 +73,5 @@ func runUninstall(args []string) int {
 	if *purge {
 		word = s.ID
 	}
-	return execute(p, service.RemoveNextSteps(s, *purge), word, *guided)
+	return execute(p, service.RemoveNextSteps(s, host, *purge), word, *guided)
 }

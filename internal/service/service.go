@@ -26,6 +26,11 @@ func Dir(s catalog.Service) string { return path.Join(BaseDir, s.ID) }
 // ComposePath returns where the service's compose.yaml lives.
 func ComposePath(s catalog.Service) string { return path.Join(Dir(s), "compose.yaml") }
 
+// composeCmd returns a `docker compose` command on the service's compose.yaml.
+func composeCmd(s catalog.Service, args ...string) []string {
+	return append([]string{"docker", "compose", "--file", ComposePath(s)}, args...)
+}
+
 // Host is what the deploy plan needs to know about the machine.
 type Host struct {
 	Linux        bool
@@ -42,6 +47,8 @@ type Host struct {
 	// State is the service's caratcore.json, or nil when it does not exist
 	// or cannot be read.
 	State *State
+	// Backups are the copies of the service folder made by update.
+	Backups []string
 }
 
 // DeployPlan returns the steps that deploy s on h. version is the running
@@ -73,8 +80,8 @@ func DeployPlan(s catalog.Service, h Host, version string) (plan.Plan, error) {
 		// the service is already running. Every step is safe to repeat, and
 		// the ports are probably taken by the service itself.
 	case originOtherVersion:
-		return p, fmt.Errorf("%s was written by CaratCore %s with the image %s; this version deploys %s and cannot update services yet, so it does not change it",
-			ComposePath(s), h.State.CaratCoreVersion, h.State.Image, s.Image)
+		return p, fmt.Errorf("%s was written by CaratCore %s with the image %s; this version deploys %s. `install` does not replace it; `caratcore update %s` does, copying the service folder first",
+			ComposePath(s), h.State.CaratCoreVersion, h.State.Image, s.Image, s.ID)
 	default:
 		return p, fmt.Errorf("%s exists and is not the file this CaratCore version would write; %s. CaratCore does not change it. Review it or move it away to deploy again",
 			ComposePath(s), unknownOriginReason(h, s))
@@ -88,10 +95,6 @@ func DeployPlan(s catalog.Service, h Host, version string) (plan.Plan, error) {
 	for i, v := range s.Volumes {
 		dataDirs[i] = path.Join(Dir(s), v.Name)
 	}
-	composeCmd := func(args ...string) []string {
-		return append([]string{"docker", "compose", "--file", ComposePath(s)}, args...)
-	}
-
 	if len(dataDirs) > 0 {
 		p.Steps = append(p.Steps, plan.Step{
 			ID:    "create-data-dirs",
@@ -131,7 +134,7 @@ func DeployPlan(s catalog.Service, h Host, version string) (plan.Plan, error) {
 			Reason: "downloading first means a network problem stops here, before anything is started",
 			Learn: "An image is a read-only package with the program and everything it needs; a container is a running copy of it. " +
 				"The text after `:` is the tag (the version): CaratCore pins it, so it always installs the same software",
-			Command: composeCmd("pull"),
+			Command: composeCmd(s, "pull"),
 			Root:    true,
 		},
 		plan.Step{
@@ -141,7 +144,7 @@ func DeployPlan(s catalog.Service, h Host, version string) (plan.Plan, error) {
 			Learn: "`--detach` returns the terminal to you while the container keeps running. " +
 				"`restart: unless-stopped` in compose.yaml tells Docker to start it again after a reboot or a crash, " +
 				"unless you stopped it yourself",
-			Command: composeCmd("up", "--detach"),
+			Command: composeCmd(s, "up", "--detach"),
 			Root:    true,
 		},
 	)

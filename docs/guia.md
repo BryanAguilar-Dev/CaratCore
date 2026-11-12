@@ -306,6 +306,29 @@ La confirmación de `--purge` pide escribir el id del servicio en vez de
 El aviso de DNS de AdGuard es un dato del catálogo (`remove_warning`), no un
 `if id == "adguard-home"` en el código.
 
+**Actualizar** (`update.go`, D33) es otra función pura, `UpdatePlan`, sobre
+el mismo `Detect`. Lo interesante es el **orden de los pasos**, elegido
+pensando en qué pasa si algo falla en cada punto:
+1. `docker pull`: si falla la red, el servicio sigue funcionando con la
+   imagen vieja y no se ha tocado nada.
+2. `docker compose stop`: copiar una base de datos mientras se escribe puede
+   dar una copia rota.
+3. `cp -a` de la carpeta a `<id>.bak-<fecha>`, al lado y no dentro (dentro,
+   `cp` intentaría copiar la copia).
+4. y 5. Escribir `compose.yaml` y `caratcore.json`.
+6. `up --detach`: Compose ve que la imagen cambió y recrea el contenedor.
+
+Si se corta entre el 4 y el 6, el `compose.yaml` ya es el nuevo. Repetir
+`update` da entonces un plan de un solo paso (`up --detach`): el comando
+sirve también para terminar una actualización a medias, igual que repetir
+`install` (D18).
+
+Dos detalles de Go: `UpdatePlan` recibe la hora (`now time.Time`) en vez de
+llamar a `time.Now()` dentro, así el test fija la fecha y sabe qué carpeta
+debe salir; y el formato de fecha de Go no usa `YYYY` sino una fecha de
+ejemplo fija, `2006-01-02-150405` (1, 2, 3 de la tarde, 4, 5, 6, en el orden
+de EE. UU.: mes 01, día 02, hora 15, minuto 04, segundo 05, año 2006).
+
 ### ports
 `InUse` lee `/proc/net/{tcp,udp}[6]` y devuelve claves como `"53/udp"`.
 Antes vivía dentro de `doctor`; al necesitarlo también `service`, se movió a

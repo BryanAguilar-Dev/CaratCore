@@ -5,8 +5,8 @@ private infrastructure (a homelab) without hiding what happens on your machine.
 
 > **Status: early development.** `doctor`, installing Docker and deploying
 > AdGuard Home and Uptime Kuma work on Debian 13 amd64, and since v0.2.0 so do
-> removing services and guided mode. Updating services, backups and rollback
-> do not exist yet; see
+> removing services and guided mode. Updating services is being built for
+> v0.3 (unreleased); backups and rollback do not exist yet; see
 > [docs/decisions.md](docs/decisions.md) for what is planned.
 
 ## The idea
@@ -96,7 +96,16 @@ CaratCore refuses if you edited its `compose.yaml`. The image stays on disk
 uninstalls Docker. Before removing AdGuard Home, point your router and
 devices to another DNS server, or they will stop resolving names.
 
-Add `--guided` to `install` or `uninstall` to go one step at a time. You
+`caratcore update <service>` moves a service deployed by an older CaratCore
+to the image of this version. The plan downloads the new image first (a
+network problem stops there, with the service still running), stops the
+service, copies its folder to `/opt/caratcore/<service>.bak-<date>`, writes
+the new `compose.yaml` and starts it. A new image may convert the data to a
+format the old one cannot read: the copy lets you go back, and CaratCore
+prints the exact commands to do it. The copy is on the same disk, so it is not
+a backup. CaratCore refuses to update a `compose.yaml` you edited.
+
+Add `--guided` to `install`, `uninstall` or `update` to go one step at a time. You
 still approve the whole plan first; then, before each step, CaratCore
 explains why it runs and the ideas behind it (what a signing key or a bind
 mount is) and waits for Enter. Type `q` or press Ctrl+C to stop between

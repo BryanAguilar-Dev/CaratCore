@@ -52,7 +52,7 @@ func RemovePlan(s catalog.Service, h Host, purge bool) (plan.Plan, error) {
 			Reason: reason,
 			Learn: "`docker compose down` removes the containers and the network Compose created for them. " +
 				"It does not touch bind-mounted folders: they are ordinary folders of this machine, which is why the data survives",
-			Command: []string{"docker", "compose", "--file", ComposePath(s), "down"},
+			Command: composeCmd(s, "down"),
 			Root:    true,
 		})
 	}
@@ -80,11 +80,15 @@ func DeployNextSteps(s catalog.Service) []string {
 }
 
 // RemoveNextSteps tells the user what is left on the machine after removing s.
-func RemoveNextSteps(s catalog.Service, purge bool) []string {
+func RemoveNextSteps(s catalog.Service, h Host, purge bool) []string {
 	var next []string
 	if !purge {
 		next = append(next,
 			"The data is still in "+Dir(s)+": `caratcore install "+s.ID+"` uses it again, `caratcore uninstall "+s.ID+" --purge` deletes it.")
+	}
+	if len(h.Backups) > 0 {
+		next = append(next,
+			"The copies made by `caratcore update` are kept ("+strings.Join(h.Backups, ", ")+"); delete them yourself with sudo rm -r <folder> when you no longer need them.")
 	}
 	return append(next, "The image is still on disk; to free the space: sudo docker image rm "+s.Image)
 }

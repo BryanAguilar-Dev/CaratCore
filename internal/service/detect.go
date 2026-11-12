@@ -7,6 +7,7 @@ import (
 	"io/fs"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 
 	"github.com/BryanAguilar-Dev/CaratCore/internal/catalog"
@@ -53,5 +54,8 @@ func Detect(ctx context.Context, s catalog.Service) (Host, error) {
 	case !errors.Is(err, fs.ErrNotExist):
 		return h, fmt.Errorf("reading %s: %w", StatePath(s), err)
 	}
+
+	// The pattern is fixed and valid, so Glob cannot fail.
+	h.Backups, _ = filepath.Glob(Dir(s) + ".bak-*")
 	return h, nil
 }

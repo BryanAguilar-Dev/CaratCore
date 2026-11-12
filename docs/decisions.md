@@ -282,15 +282,47 @@ explícitamente) o **Pendiente**.
      `compose.yaml` fue editado a mano, se niega y explica por qué (D23).
      Antes de cambiar la imagen, el plan copia los datos del servicio a una
      carpeta `.bak` con fecha: una imagen nueva puede migrarlos sin vuelta
-     atrás (Uptime Kuma 1→2). No son backups completos. Dónde va la copia
-     y qué hace `--purge` con ella se decide al implementar.
+     atrás (Uptime Kuma 1→2). No son backups completos. Hecho (2026-11-12): D33.
   4. **`list`** (opcional): servicios instalados, su imagen y si están al
      día. Es lo primero que se recorta si la v0.3 se alarga.
+
+  Orden cambiado (2026-11-12): `update` y `list` antes que el script, para
+  que el script pruebe la versión entera.
 
   Fuera de la v0.3: Homepage (v0.4, depende de poder actualizar), Windows
   (P9) e idioma (P8). Aparte del código, y sin esperar a la v0.3: enseñar la
   v0.2 en r/selfhosted o r/homelab y apuntar qué preguntan y qué piden
   ([vision.md](vision.md)).
+- **D33. `update <servicio>`** (2026-11-12, bloque 3 de D32).
+  - Solo actúa si el `compose.yaml` es de otra versión de CaratCore y nadie
+    lo ha tocado (D32). Si está editado, se niega: actualizar borraría los
+    cambios. Si no está instalado, remite a `install`.
+  - Plan de 6 pasos, pensado para que un fallo deje el servicio lo mejor
+    posible: `docker pull` de la imagen nueva (un fallo de red para antes de
+    tocar nada, con el servicio aún en marcha); `docker compose stop` (una
+    copia de una base de datos en uso puede salir rota); `cp -a` de la
+    carpeta del servicio; escribir `compose.yaml` y `caratcore.json`; y
+    `up --detach`, que recrea el contenedor con la imagen nueva.
+  - La copia va **al lado** de la carpeta, no dentro:
+    `/opt/caratcore/<id>.bak-AAAA-MM-DD-HHMMSS`. Dentro se copiaría a sí
+    misma. Copia la carpeta entera (`compose.yaml`, estado y datos), así que
+    volver atrás es cambiar una carpeta por otra; los pasos siguientes dan
+    los comandos exactos. No es un backup (mismo disco, ver P11, v0.5).
+  - `uninstall --purge` no borra las copias (solo borra `/opt/caratcore/<id>/`,
+    D30), pero las nombra en los pasos siguientes para que nadie crea que no
+    queda nada. `Detect` las encuentra con `filepath.Glob`.
+  - Si el `compose.yaml` ya es el de esta versión, el plan solo contiene
+    `up --detach` (y `write-state` si falta el estado). Es lo que queda si
+    una actualización se cortó tras escribir el archivo; si no, no hace nada.
+    Repetir `update` es seguro, como en D18.
+  - Al actualizar AdGuard Home, el paso `stop` avisa de que la red se queda
+    sin DNS hasta el último paso (el mismo aviso del catálogo que en D30).
+  - `update docker` se niega: Docker viene de su repositorio apt y se
+    actualiza con `apt upgrade`.
+  - Limitación conocida: `update` arranca el servicio aunque se hubiera
+    parado con `uninstall` sin `--purge` (CaratCore no consulta a Docker qué
+    contenedores hay, para no necesitar sudo al planificar). Si una versión
+    nueva añade un puerto ocupado, el fallo lo dará `up`, no el plan.
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin

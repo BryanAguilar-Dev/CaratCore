@@ -39,6 +39,8 @@ func run(args []string) int {
 		return runInstall(args[1:])
 	case "uninstall":
 		return runUninstall(args[1:])
+	case "update":
+		return runUpdate(args[1:])
 	case "version", "--version":
 		fmt.Println("caratcore", version)
 		return 0
@@ -60,6 +62,9 @@ func printUsage(w *os.File) {
 	fmt.Fprintln(w, "           --dry-run only shows the plan")
 	fmt.Fprintln(w, "  uninstall <adguard-home|uptime-kuma> [--purge] [--guided] [--dry-run [--json]]")
 	fmt.Fprintln(w, "           stop and remove a service; its data stays unless --purge")
+	fmt.Fprintln(w, "  update <adguard-home|uptime-kuma> [--guided] [--dry-run [--json]]")
+	fmt.Fprintln(w, "           move a service to the image of this CaratCore version,")
+	fmt.Fprintln(w, "           copying its folder first")
 	fmt.Fprintln(w, "  version  show the CaratCore version")
 	fmt.Fprintln(w, "  help     show this help")
 }
