@@ -105,6 +105,11 @@ format the old one cannot read: the copy lets you go back, and CaratCore
 prints the exact commands to do it. The copy is on the same disk, so it is not
 a backup. CaratCore refuses to update a `compose.yaml` you edited.
 
+`caratcore list` shows each service of the catalog as not installed, up to
+date, update available or edited, and the copies `update` left. It only reads
+the files in `/opt/caratcore`, so it needs no sudo; it does not ask Docker
+whether the containers are running (`sudo docker ps` does).
+
 Add `--guided` to `install`, `uninstall` or `update` to go one step at a time. You
 still approve the whole plan first; then, before each step, CaratCore
 explains why it runs and the ideas behind it (what a signing key or a bind

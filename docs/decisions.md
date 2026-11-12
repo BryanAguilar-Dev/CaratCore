@@ -284,7 +284,8 @@ explícitamente) o **Pendiente**.
      carpeta `.bak` con fecha: una imagen nueva puede migrarlos sin vuelta
      atrás (Uptime Kuma 1→2). No son backups completos. Hecho (2026-11-12): D33.
   4. **`list`** (opcional): servicios instalados, su imagen y si están al
-     día. Es lo primero que se recorta si la v0.3 se alarga.
+     día. Es lo primero que se recorta si la v0.3 se alarga. Hecho
+     (2026-11-12): D34.
 
   Orden cambiado (2026-11-12): `update` y `list` antes que el script, para
   que el script pruebe la versión entera.
@@ -323,6 +324,13 @@ explícitamente) o **Pendiente**.
     parado con `uninstall` sin `--purge` (CaratCore no consulta a Docker qué
     contenedores hay, para no necesitar sudo al planificar). Si una versión
     nueva añade un puerto ocupado, el fallo lo dará `up`, no el plan.
+- **D34. `list`** (2026-11-12, bloque 4 de D32). Un estado por servicio del
+  catálogo: `not installed`, `up to date`, `update available` o `edited`,
+  con el detalle y, si hay algo que hacer, el comando. Además, las copias de
+  `update`. Solo lee archivos de `/opt/caratcore`: no pregunta a Docker si
+  el contenedor está en marcha, porque exigiría sudo (D17), y la salida lo
+  dice. La lógica (`StatusOf`) está en `service`; la tabla
+  (`text/tabwriter`), en la CLI.
 
 ## Propuestas (por confirmar)
 - **P1. Usuario objetivo:** entusiasta principiante y curioso, no un usuario sin

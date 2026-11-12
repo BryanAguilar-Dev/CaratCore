@@ -329,6 +329,13 @@ debe salir; y el formato de fecha de Go no usa `YYYY` sino una fecha de
 ejemplo fija, `2006-01-02-150405` (1, 2, 3 de la tarde, 4, 5, 6, en el orden
 de EE. UU.: mes 01, día 02, hora 15, minuto 04, segundo 05, año 2006).
 
+**Listar** (`status.go`, D34): `StatusOf` reutiliza `composeOrigin` y
+traduce cada caso a un estado legible (`up to date`, `update available`...).
+La tabla la pinta la CLI (`cmd/caratcore/list.go`) con `text/tabwriter`, de
+la librería estándar, que alinea columnas separadas por `\t`. Así el núcleo
+decide **qué** se dice y la CLI **cómo** se ve, la misma separación que hay
+entre `plan` y `plan.Render`.
+
 ### ports
 `InUse` lee `/proc/net/{tcp,udp}[6]` y devuelve claves como `"53/udp"`.
 Antes vivía dentro de `doctor`; al necesitarlo también `service`, se movió a
