@@ -385,6 +385,13 @@ explícitamente) o **Pendiente**.
   | v2 | Panel web | ver y aprobar el mismo plan desde el navegador (P10.3) |
 
 ## Pendientes
+- Hecho (2026-11-12): **v0.3.0 publicada** tras probar el binario del
+  borrador en la VM `franc1` (`docs/prueba-v0.3.0.md`): script 31 OK, 0
+  FALLO, y los casos manuales y el ensayo de adopción, bien. Un defecto de
+  textos (`Learn` en `update`) se corrigió antes de etiquetar. La prueba en
+  Franc (F) se hace **después** de publicar, por decisión de Bryan: el
+  riesgo es bajo (si algo no cuadra, CaratCore se niega a tocarlo) y lo que
+  encuentre irá a una v0.3.1.
 - Hecho (2026-11-11): **v0.2.0 publicada** tras probar el borrador en la VM
   `franc1` (`docs/prueba-v0.2.0.md`): 15 de 16 casos (M5, opcional, sin
   hacer). Los dos textos corregidos (D31) obligaron a rehacer el borrador y

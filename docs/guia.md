@@ -432,9 +432,9 @@ pasa (`docs/prueba-v0.1.0.md`).
   prueba en la VM, actualizar servicios. En paralelo (solo docs), la guía de Debian con
   acceso desde Windows o el móvil; después, Homepage (P10). Visión de producto y
   monetización, como hipótesis: [vision.md](vision.md).
-- **v0.3 programada (2026-11-12), sin publicar**: `caratcore.json` por
-  servicio, `update`, `list` y `scripts/vm-test.sh` (D32-D34). Falta la
-  prueba de `docs/prueba-v0.3.0.md` en la VM y en Franc. Hoja de ruta hasta
+- **v0.3.0 publicada (2026-11-12)**: `caratcore.json` por
+  servicio, `update`, `list` y `scripts/vm-test.sh` (D32-D34). Probada en la VM;
+  falta la prueba en Franc (F de `docs/prueba-v0.3.0.md`). Hoja de ruta hasta
   la v2: P11 en [decisions.md](decisions.md).
 - Pendientes de seguridad y diseño: ver la sección "Pendientes" de
   [decisions.md](decisions.md).

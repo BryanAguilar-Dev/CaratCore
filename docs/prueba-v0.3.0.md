@@ -19,7 +19,9 @@ scp caratcore-linux-amd64 scripts/vm-test.sh <usuario>@<vm>:
 - [x] (obligatorio) Pide escribir `vm` antes de tocar nada.
 - [x] (obligatorio) Termina con `Result: N OK, 0 FALLO`. Hecho (2026-11-12,
   VM `franc1`, binario local `v0.3.0-test`, SHA-256 `d187348c...abd887`):
-  **31 OK, 0 FALLO** a la primera.
+  **31 OK, 0 FALLO** a la primera. Repetido con el binario del borrador
+  `v0.3.0` (SHA-256 `95e3391e...fcaa4372`, tras corregir los `Learn`):
+  checksum verificado en la VM, **31 OK, 0 FALLO**.
 
 Qué comprueba: `version`; `list` en los cuatro estados; `install` escribe
 `caratcore.json` con el hash del `compose.yaml` y la web responde; repetir
@@ -74,6 +76,9 @@ Después del script (deja Uptime Kuma desinstalado).
   qué (correcto, D32).
 
 ## F. Franc (servicios desplegados con la v0.1)
+
+Se hace con la v0.3.0 ya publicada (decisión de Bryan, 2026-11-12): en Franc,
+`wget` del binario y de `SHA256SUMS` desde la release y `sha256sum -c`.
 
 Franc tiene AdGuard Home y Uptime Kuma desplegados antes de que existiera
 `caratcore.json`. Es la prueba de que no hace falta migración (D32). Estar
