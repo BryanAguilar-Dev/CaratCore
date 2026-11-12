@@ -376,6 +376,19 @@ Los tests nunca tocan el sistema: usan `Env` falsos (doctor) o `Host`
 inventados (docker). La prueba real del instalador se hace en Franc, estando
 delante del portátil por si se pierde el acceso remoto (D19).
 
+Desde la v0.3 hay un tercer nivel entre los tests y la persona:
+`scripts/vm-test.sh`, en Bash, que se ejecuta en la VM con el binario de
+verdad. Cada caso es una línea `check "nombre" "$salida" comando...`: si el
+comando sale con 0, imprime OK; si no, FALLO y el final de la salida.
+Simula "otra versión de CaratCore" cambiando un comentario del
+`compose.yaml` y recalculando su hash con `sha256sum`, que es justo lo que
+compara `composeOrigin`. Dos trampas evitadas: comparar dos hashes vacíos
+daría OK (`same_hash` exige que no lo estén), y que un puerto acepte
+conexiones no prueba que la web funcione, porque Docker lo abre antes de
+que la aplicación arranque (`wait_http` espera una respuesta HTTP real,
+usando `/dev/tcp` de Bash, sin `curl`). Lo que necesita ojos (navegador,
+`q`, colores) sigue en `docs/prueba-v0.3.0.md`.
+
 ## 6. Cómo llega CaratCore al usuario
 
 Go compila todo en **un único ejecutable**. Con `CGO_ENABLED=0` ni siquiera

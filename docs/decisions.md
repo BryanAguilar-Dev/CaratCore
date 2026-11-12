@@ -274,7 +274,9 @@ explícitamente) o **Pendiente**.
      sin tocar nada más: no hace falta migración.
   2. **Script de prueba en la VM**: los casos no interactivos dicen OK o
      FALLO solos; Bryan hace solo lo que necesita una persona (Ctrl+C,
-     colores, navegador).
+     colores, navegador). Hecho (2026-11-12): `scripts/vm-test.sh`,
+     en Bash (se ejecuta en la VM, no se distribuye), con los manuales en
+     `docs/prueba-v0.3.0.md`.
   3. **`update <servicio>`**: escribir el `compose.yaml` con la imagen nueva,
      `pull` y `up -d`. Se actualiza **solo a la imagen del catálogo** del
      binario, no a la última de Docker Hub: versiones fijas y probadas, como
