@@ -5,8 +5,8 @@ private infrastructure (a homelab) without hiding what happens on your machine.
 
 > **Status: early development.** `doctor`, installing Docker and deploying
 > AdGuard Home and Uptime Kuma work on Debian 13 amd64, and since v0.2.0 so do
-> removing services and guided mode. Updating services is being built for
-> v0.3 (unreleased); backups and rollback do not exist yet; see
+> removing services and guided mode, and since v0.3.0 updating services
+> (with a copy of their folder first) and `list`. Backups do not exist yet; see
 > [docs/decisions.md](docs/decisions.md) for what is planned.
 
 ## The idea
