@@ -409,7 +409,16 @@ explícitamente) o **Pendiente**.
   antes en Franc) y los casos de fallo opcionales (G).
 - Estado persistente (archivo o SQLite), rollback y actualizaciones.
 - AdGuard Home como DNS de Tailscale: riesgo de perder internet si el servidor
-  se apaga; necesita DNS de respaldo.
+  se apaga; necesita DNS de respaldo. **Plan (2026-11-12, Bryan), por hacer en
+  Franc:** consola de Tailscale → DNS → nameserver personalizado con la IP
+  `100.x` de Franc y "Override DNS servers"; AdGuard escuchando en todas las
+  interfaces. El respaldo es manual: si Franc se apaga, se desconecta
+  Tailscale en el dispositivo. Sin segundo DNS en Tailscale (los clientes
+  usarían uno u otro al azar y se colarían anuncios). En Franc,
+  `tailscale set --accept-dns=false`, para que no dependa de su propio
+  AdGuard. Antes: IP fija de Franc en el router y `HandleLidSwitch=ignore`
+  para que no se suspenda al cerrar la tapa. Idea: en red bridge, AdGuard ve
+  todas las consultas con la IP de Docker, no la de cada dispositivo.
 - Umbrales de RAM y disco de `doctor`: son estimaciones, hay que medirlas con
   los servicios reales.
 - Probar los casos de fallo de `doctor` en una máquina real.
